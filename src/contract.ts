@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copied from Director src/shared/control-surface.ts; operator-control API version 1.
+// Semantically identical to Director src/shared/control-surface.ts; operator-control API version 1.
 import { z } from "zod";
 
-export const controlServiceIdSchema = z.enum(["youtubeChat", "chatAgent", "spectator"]);
+const serviceIdSchema = z.enum(["youtubeChat", "chatAgent", "spectator"]);
 
 export const controlCommandSchema = z.discriminatedUnion("command", [
   z.object({ command: z.literal("run.preflight") }).strict(),
@@ -14,11 +14,10 @@ export const controlCommandSchema = z.discriminatedUnion("command", [
   z.object({ command: z.literal("obs.setScene"), args: z.object({ scene: z.string().min(1).max(200) }).strict() }).strict(),
   z.object({ command: z.literal("obs.setStream"), args: z.object({ enabled: z.boolean() }).strict() }).strict(),
   z.object({ command: z.literal("obs.setRecord"), args: z.object({ enabled: z.boolean() }).strict() }).strict(),
-  z.object({ command: z.literal("service.start"), args: z.object({ id: controlServiceIdSchema }).strict() }).strict(),
-  z.object({ command: z.literal("service.stop"), args: z.object({ id: controlServiceIdSchema }).strict() }).strict(),
+  z.object({ command: z.literal("service.start"), args: z.object({ id: serviceIdSchema }).strict() }).strict(),
+  z.object({ command: z.literal("service.stop"), args: z.object({ id: serviceIdSchema }).strict() }).strict(),
   z.object({ command: z.literal("service.restart"), args: z.object({ id: z.literal("spectator") }).strict() }).strict(),
 ]);
-
 export type ControlCommand = z.infer<typeof controlCommandSchema>;
 
 export const controlCommandIds = [
@@ -35,7 +34,10 @@ export const controlCommandIds = [
   "service.stop",
   "service.restart",
 ] as const;
+export const CONTROL_COMMAND_IDS = controlCommandIds;
+export const CONTROL_SERVICE_IDS = ["youtubeChat", "chatAgent", "spectator"] as const;
 
+export const controlServiceIdSchema = serviceIdSchema;
 export const controlStateSchema = z.object({
   api: z.literal(1),
   run: z.object({
@@ -60,7 +62,7 @@ export const controlStateSchema = z.object({
     recording: z.boolean().nullable(),
   }).strict(),
   services: z.array(z.object({
-    id: controlServiceIdSchema,
+    id: serviceIdSchema,
     label: z.string(),
     state: z.enum(["stopped", "starting", "running", "error", "unavailable"]),
     detail: z.string().nullable(),
@@ -68,24 +70,9 @@ export const controlStateSchema = z.object({
     canStop: z.boolean(),
   }).strict()),
 }).strict();
-
 export type ControlState = z.infer<typeof controlStateSchema>;
 
-export const controlCapabilitiesSchema = z.object({
-  api: z.number().int(),
-  directorVersion: z.string(),
-  commands: z.array(z.string()),
-  services: z.array(controlServiceIdSchema),
-}).strict();
-
-export type ControlCapabilities = z.infer<typeof controlCapabilitiesSchema>;
-
-export const controlPairResponseSchema = z.object({
-  surfaceId: z.string(),
-  token: z.string(),
-}).strict();
-
-export const controlPairRequestSchema = z.object({
+export const controlSurfacePairRequestSchema = z.object({
   code: z.string().regex(/^\d{6}$/),
   name: z.string().trim().min(1).max(64),
 }).strict();

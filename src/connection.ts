@@ -3,11 +3,10 @@ import { ZodError } from "zod";
 import {
   controlCommandIds,
   controlStateSchema,
-  type ControlCapabilities,
   type ControlCommand,
   type ControlState,
 } from "./contract";
-import { DirectorClient, DirectorCommandError } from "./director-client";
+import { DirectorClient, DirectorCommandError, type ControlCapabilities } from "./director-client";
 
 export const DEFAULT_DIRECTOR_URL = "http://127.0.0.1:8782";
 export type ConnectionStatus = "unconfigured" | "unpaired" | "connecting" | "connected" | "offline" | "incompatible";

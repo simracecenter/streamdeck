@@ -13,7 +13,7 @@ import { InFlightLock } from "../action-runner";
 import type { ControlState } from "../contract";
 import { DirectorConnection, type ConnectionSnapshot } from "../connection";
 import { HoldToFire } from "../hold";
-import { render, type ActionId, type ActionSettings } from "../render";
+import { render, resolveObsScene, type ActionId, type ActionSettings } from "../render";
 
 type ActionData = ActionSettings;
 type CommandAction = KeyDownEvent<ActionData>["action"];
@@ -208,18 +208,38 @@ export class ObsSceneAction extends ControlAction {
     super(connection, "obs-scene");
   }
   override onKeyDown(event: KeyDownEvent<ActionData>): Promise<void> {
-    const scene = event.payload.settings.scene;
-    if (!scene) return this.showAlert(event.action, "Select scene");
+    const settings = event.payload.settings;
+    const state = this.connection.snapshot().state;
+    const scene = resolveObsScene(settings, state);
+    if (!scene) {
+      const slot = settings.slot;
+      return this.showAlert(
+        event.action,
+        Number.isInteger(slot) && slot !== undefined && slot >= 1 && slot <= 8
+          ? `Scene slot ${slot} unavailable`
+          : "Select scene",
+      );
+    }
     return this.runCommand(event.action, () => this.connection.command("obs.setScene", { scene }));
   }
   override async onPropertyInspectorDidAppear(_event: PropertyInspectorDidAppearEvent<ActionData>): Promise<void> {
     const state = await this.currentState();
-    await streamDeck.ui.sendToPropertyInspector({ type: "scene-options", scenes: state?.obs.scenes ?? [] });
+    await streamDeck.ui.sendToPropertyInspector({
+      type: "scene-options",
+      scenes: state?.obs.scenes ?? [],
+      liveScenes: state?.obs.liveScenes ?? [],
+    });
   }
   override async onSendToPlugin(event: SendToPluginEvent<Record<string, any>, ActionData>): Promise<void> {
-    const value = event.payload as { type?: unknown; scene?: unknown };
-    if (value?.type !== "set-scene" || typeof value.scene !== "string") return;
-    await event.action.setSettings({ scene: value.scene });
+    const value = event.payload as { type?: unknown; scene?: unknown; slot?: unknown; clear?: unknown };
+    if (value?.type !== "set-scene") return;
+    if (value.clear === true) {
+      await event.action.setSettings({});
+    } else if (typeof value.slot === "number" && Number.isInteger(value.slot) && value.slot >= 1 && value.slot <= 8) {
+      await event.action.setSettings({ scene: "", slot: value.slot });
+    } else if (typeof value.scene === "string") {
+      await event.action.setSettings({ scene: value.scene });
+    }
   }
 }
 

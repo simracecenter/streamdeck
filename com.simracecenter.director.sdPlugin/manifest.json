@@ -5,7 +5,7 @@
   "Version": "0.1.0.0",
   "Author": "Sim RaceCenter",
   "Description": "Operator controls for Sim RaceCenter Director",
-  "Category": "Sim RaceCenter",
+  "Category": "Sim RaceCenter Director",
   "CategoryIcon": "imgs/plugin/category-icon",
   "Icon": "imgs/plugin/marketplace",
   "CodePath": "bin/plugin.js",
@@ -26,6 +26,13 @@
   "Nodejs": {
     "Version": "24"
   },
+  "Profiles": [
+    {
+      "Name": "profiles/Sim RaceCenter",
+      "DeviceType": 0,
+      "DontAutoSwitchWhenInstalled": true
+    }
+  ],
   "Actions": [
     {
       "Name": "Run Status",

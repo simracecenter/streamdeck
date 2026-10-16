@@ -48,6 +48,18 @@ describe("render", () => {
     expect(render("obs-record", "connected", state).title).toBe("OBS ?");
   });
 
+  it("resolves scene slots and prefers explicit scenes", () => {
+    const state = initialState();
+    expect(render("obs-scene", "connected", state, { slot: 1 }))
+      .toMatchObject({ title: "Grid", image: "imgs/keys/green" });
+    expect(render("obs-scene", "connected", state, { slot: 2 }))
+      .toMatchObject({ title: "Replay", image: "imgs/keys/grey" });
+    expect(render("obs-scene", "connected", state, { scene: "Podium", slot: 1 }))
+      .toMatchObject({ title: "Podium", image: "imgs/keys/grey" });
+    expect(render("obs-scene", "connected", state, { slot: 4 }))
+      .toMatchObject({ title: "SCENE 4\n—", image: "imgs/keys/grey" });
+  });
+
   it("shows the preflight warning but does not suppress start", () => {
     expect(render("start-run", "connected", initialState()).title).toBe("NEEDS\nPREFLT");
   });

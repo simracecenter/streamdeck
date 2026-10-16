@@ -19,7 +19,12 @@
       let selected = "";
       function connectElgatoStreamDeckSocket(port, pluginUUID, registerEvent, _info, rawActionInfo) {
         actionInfo = JSON.parse(rawActionInfo);
-        selected = actionInfo.payload?.settings?.scene || "";
+        const settings = actionInfo.payload?.settings || {};
+        selected = typeof settings.scene === "string" && settings.scene.trim()
+          ? `scene:${settings.scene}`
+          : Number.isInteger(settings.slot) && settings.slot >= 1 && settings.slot <= 8
+            ? `slot:${settings.slot}`
+            : "";
         socket = new WebSocket(`ws://127.0.0.1:${port}`);
         socket.onopen = () => socket.send(JSON.stringify({ event: registerEvent, uuid: pluginUUID }));
         socket.onmessage = event => {
@@ -27,7 +32,18 @@
           if (message.event !== "sendToPropertyInspector" || message.payload?.type !== "scene-options") return;
           const select = document.querySelector("#scene");
           select.replaceChildren(new Option("Select scene…", ""));
-          for (const scene of message.payload.scenes || []) select.add(new Option(scene, scene));
+          const slots = document.createElement("optgroup");
+          slots.label = "Live scene slots";
+          for (let slot = 1; slot <= 8; slot++) {
+            const liveScene = message.payload.liveScenes?.[slot - 1];
+            const label = `Live scene slot ${slot} (auto)${liveScene ? `: ${liveScene}` : ""}`;
+            slots.append(new Option(label, `slot:${slot}`));
+          }
+          select.add(slots);
+          const scenes = document.createElement("optgroup");
+          scenes.label = "Explicit OBS scenes";
+          for (const scene of message.payload.scenes || []) scenes.append(new Option(scene, `scene:${scene}`));
+          select.add(scenes);
           select.value = selected;
         };
       }
@@ -36,7 +52,13 @@
       }
       document.querySelector("#scene").addEventListener("change", event => {
         selected = event.target.value;
-        sendToPlugin({ type: "set-scene", scene: selected });
+        if (selected.startsWith("slot:")) {
+          sendToPlugin({ type: "set-scene", slot: Number(selected.slice(5)) });
+        } else if (selected.startsWith("scene:")) {
+          sendToPlugin({ type: "set-scene", scene: selected.slice(6) });
+        } else {
+          sendToPlugin({ type: "set-scene", clear: true });
+        }
       });
     </script>
   </body>

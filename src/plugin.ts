@@ -43,4 +43,8 @@ for (const action of [
   streamDeck.actions.registerAction(action);
 }
 
+streamDeck.actions.onKeyDown(event => {
+  streamDeck.logger.debug(`keyDown delivered for ${event.action.manifestId}`);
+});
+
 streamDeck.connect();

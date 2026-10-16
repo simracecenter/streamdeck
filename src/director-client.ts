@@ -1,14 +1,28 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+import { z } from "zod";
 import {
-  controlCapabilitiesSchema,
   controlCommandSchema,
-  controlPairResponseSchema,
+  controlServiceIdSchema,
   controlStateSchema,
-  type ControlCapabilities,
+  controlSurfacePairRequestSchema,
   type ControlCommand,
   type ControlState,
 } from "./contract";
 import { parseSse } from "./sse";
+
+const controlCapabilitiesSchema = z.object({
+  api: z.number().int(),
+  directorVersion: z.string(),
+  commands: z.array(z.string()),
+  services: z.array(controlServiceIdSchema),
+}).strict();
+
+const controlPairResponseSchema = z.object({
+  surfaceId: z.string(),
+  token: z.string(),
+}).strict();
+
+export type ControlCapabilities = z.infer<typeof controlCapabilitiesSchema>;
 
 export class DirectorCommandError extends Error {
   constructor(readonly status: number, message: string) {
@@ -33,9 +47,10 @@ export class DirectorClient {
   }
 
   async pair(code: string, name: string): Promise<{ surfaceId: string; token: string }> {
+    const request = controlSurfacePairRequestSchema.parse({ code, name });
     const response = await this.request("/v1/pair", {
       method: "POST",
-      body: JSON.stringify({ code, name }),
+      body: JSON.stringify(request),
     }, false);
     const parsed = controlPairResponseSchema.safeParse(response);
     if (!parsed.success) throw new DirectorCommandError(200, "Invalid pairing response");

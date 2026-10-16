@@ -15,7 +15,7 @@ export type ActionId =
   | "service"
   | "connection";
 
-export type ActionSettings = { scene?: string; serviceId?: string };
+export type ActionSettings = { scene?: string; slot?: number; serviceId?: string };
 export interface RenderedAction {
   title: string;
   state: 0 | 1;
@@ -28,6 +28,14 @@ const images = {
   amber: "imgs/keys/amber",
   red: "imgs/keys/red",
 } as const;
+
+export function resolveObsScene(settings: ActionSettings, state: ControlState | null): string | undefined {
+  const scene = settings.scene?.trim();
+  if (scene) return scene;
+  const slot = settings.slot;
+  if (!Number.isInteger(slot) || slot === undefined || slot < 1 || slot > 8) return undefined;
+  return state?.obs.liveScenes[slot - 1]?.trim() || undefined;
+}
 
 export function render(
   action: ActionId,
@@ -78,7 +86,11 @@ export function render(
         ? { title: "HELD", state: 0, image: images.amber }
         : { title: "ALL STOP", state: 0, image: images.red };
     case "obs-scene": {
-      const scene = settings.scene?.trim();
+      const scene = resolveObsScene(settings, state);
+      const slot = settings.slot;
+      if (!scene && Number.isInteger(slot) && slot !== undefined && slot >= 1 && slot <= 8) {
+        return { title: `SCENE ${slot}\n—`, state: 0, image: images.grey };
+      }
       const selected = Boolean(scene && state.obs.programScene === scene);
       return { title: scene || "SELECT\nSCENE", state: 0, image: selected ? images.green : images.grey };
     }

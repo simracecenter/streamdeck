@@ -70,6 +70,22 @@ describe("built plugin with fake Stream Deck host", () => {
     await host.waitFor(message => message.event === "setImage" && message.context === "scene-context" &&
       String((message.payload as any)?.image).includes("green"));
 
+    host.send(obsScene, "willAppear", { settings: { slot: 2 } }, "scene-slot-context");
+    await host.waitFor(message => message.event === "setTitle" &&
+      message.context === "scene-slot-context" &&
+      (message.payload as any)?.title === "Replay");
+    host.send(obsScene, "keyDown", { settings: { slot: 2 } }, "scene-slot-context");
+    await host.waitFor(message => message.event === "showOk" && message.context === "scene-slot-context");
+    expect(director.commands.some(item => item.command === "obs.setScene" && item.args.scene === "Replay")).toBe(true);
+    const sceneCommandCount = director.commands.filter(item => item.command === "obs.setScene").length;
+    host.send(obsScene, "willAppear", { settings: { slot: 8 } }, "missing-scene-slot");
+    await host.waitFor(message => message.event === "setTitle" &&
+      message.context === "missing-scene-slot" &&
+      (message.payload as any)?.title === "SCENE 8\n—");
+    host.send(obsScene, "keyDown", { settings: { slot: 8 } }, "missing-scene-slot");
+    await host.waitFor(message => message.event === "showAlert" && message.context === "missing-scene-slot");
+    expect(director.commands.filter(item => item.command === "obs.setScene")).toHaveLength(sceneCommandCount);
+
     host.send(obsStream, "willAppear");
     host.send(obsStream, "keyDown");
     await host.waitFor(message => message.event === "showOk" && message.context === `${obsStream}-context`);
