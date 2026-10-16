@@ -1,0 +1,217 @@
+{
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+  "UUID": "com.simracecenter.director",
+  "Name": "Sim RaceCenter Director",
+  "Version": "0.1.0.0",
+  "Author": "Sim RaceCenter",
+  "Description": "Operator controls for Sim RaceCenter Director",
+  "Category": "Sim RaceCenter",
+  "CategoryIcon": "imgs/plugin/category-icon",
+  "Icon": "imgs/plugin/marketplace",
+  "CodePath": "bin/plugin.js",
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "7.1"
+  },
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    },
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    }
+  ],
+  "Nodejs": {
+    "Version": "24"
+  },
+  "Actions": [
+    {
+      "Name": "Run Status",
+      "UUID": "com.simracecenter.director.run-status",
+      "Icon": "imgs/actions/status",
+      "Tooltip": "Shows the current Director run state.",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/grey",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "Name": "Preflight",
+      "UUID": "com.simracecenter.director.preflight",
+      "Icon": "imgs/actions/preflight",
+      "Tooltip": "Run the Director preflight checks.",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/grey",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "Name": "Start Run",
+      "UUID": "com.simracecenter.director.start-run",
+      "Icon": "imgs/actions/start",
+      "Tooltip": "Start a Director run.",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/grey",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "Name": "Pause / Resume",
+      "UUID": "com.simracecenter.director.pause-resume",
+      "Icon": "imgs/actions/pause",
+      "Tooltip": "Pause or resume the active run.",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/grey",
+          "Title": "PAUSE",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "imgs/keys/amber",
+          "Title": "RESUME",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "Name": "Stop Run",
+      "UUID": "com.simracecenter.director.stop-run",
+      "Icon": "imgs/actions/stop",
+      "Tooltip": "Hold for one second to stop a run.",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/amber",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "Name": "ALL STOP",
+      "UUID": "com.simracecenter.director.all-stop",
+      "Icon": "imgs/actions/all-stop",
+      "Tooltip": "Hold for one second to issue ALL STOP.",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/red",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "Name": "OBS Scene",
+      "UUID": "com.simracecenter.director.obs-scene",
+      "Icon": "imgs/actions/scene",
+      "Tooltip": "Switch and tally an OBS scene.",
+      "PropertyInspectorPath": "ui/scene.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/grey",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "Name": "OBS Stream",
+      "UUID": "com.simracecenter.director.obs-stream",
+      "Icon": "imgs/actions/stream",
+      "Tooltip": "Start streaming or hold to stop.",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/grey",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "imgs/keys/green",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "Name": "OBS Record",
+      "UUID": "com.simracecenter.director.obs-record",
+      "Icon": "imgs/actions/record",
+      "Tooltip": "Start recording or hold to stop.",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/grey",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "imgs/keys/green",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "Name": "Service",
+      "UUID": "com.simracecenter.director.service",
+      "Icon": "imgs/actions/service",
+      "Tooltip": "Start or stop a Director service.",
+      "PropertyInspectorPath": "ui/service.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/grey",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "imgs/keys/green",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "Name": "Connection",
+      "UUID": "com.simracecenter.director.connection",
+      "Icon": "imgs/actions/connection",
+      "Tooltip": "Director connection status; press to reconnect.",
+      "PropertyInspectorPath": "ui/connection.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/grey",
+          "TitleAlignment": "middle"
+        }
+      ]
+    }
+  ]
+}

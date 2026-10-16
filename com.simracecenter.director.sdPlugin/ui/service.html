@@ -1,0 +1,43 @@
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Director Service</title>
+    <style>
+      body { margin: 12px; background: #202225; color: #f5f5f5; font: 13px sans-serif; }
+      label { display: block; margin-bottom: 5px; }
+      select { box-sizing: border-box; width: 100%; padding: 7px; }
+    </style>
+  </head>
+  <body>
+    <label for="service">Service</label>
+    <select id="service"><option value="">Waiting for Director…</option></select>
+    <script>
+      let socket;
+      let actionInfo;
+      let selected = "";
+      function connectElgatoStreamDeckSocket(port, pluginUUID, registerEvent, _info, rawActionInfo) {
+        actionInfo = JSON.parse(rawActionInfo);
+        selected = actionInfo.payload?.settings?.serviceId || "";
+        socket = new WebSocket(`ws://127.0.0.1:${port}`);
+        socket.onopen = () => socket.send(JSON.stringify({ event: registerEvent, uuid: pluginUUID }));
+        socket.onmessage = event => {
+          const message = JSON.parse(event.data);
+          if (message.event !== "sendToPropertyInspector" || message.payload?.type !== "service-options") return;
+          const select = document.querySelector("#service");
+          select.replaceChildren(new Option("Select service…", ""));
+          for (const service of message.payload.services || []) select.add(new Option(service.label, service.id));
+          select.value = selected;
+        };
+      }
+      function sendToPlugin(payload) {
+        socket?.send(JSON.stringify({ action: actionInfo.action, event: "sendToPlugin", context: actionInfo.context, payload }));
+      }
+      document.querySelector("#service").addEventListener("change", event => {
+        selected = event.target.value;
+        sendToPlugin({ type: "set-service", serviceId: selected });
+      });
+    </script>
+  </body>
+</html>
