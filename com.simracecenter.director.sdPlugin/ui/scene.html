@@ -1,0 +1,65 @@
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>OBS Scene</title>
+    <style>
+      body { margin: 12px; background: #202225; color: #f5f5f5; font: 13px sans-serif; }
+      label { display: block; margin-bottom: 5px; }
+      select { box-sizing: border-box; width: 100%; padding: 7px; }
+    </style>
+  </head>
+  <body>
+    <label for="scene">Scene</label>
+    <select id="scene"><option value="">Waiting for Director…</option></select>
+    <script>
+      let socket;
+      let actionInfo;
+      let selected = "";
+      function connectElgatoStreamDeckSocket(port, pluginUUID, registerEvent, _info, rawActionInfo) {
+        actionInfo = JSON.parse(rawActionInfo);
+        const settings = actionInfo.payload?.settings || {};
+        selected = typeof settings.scene === "string" && settings.scene.trim()
+          ? `scene:${settings.scene}`
+          : Number.isInteger(settings.slot) && settings.slot >= 1 && settings.slot <= 8
+            ? `slot:${settings.slot}`
+            : "";
+        socket = new WebSocket(`ws://127.0.0.1:${port}`);
+        socket.onopen = () => socket.send(JSON.stringify({ event: registerEvent, uuid: pluginUUID }));
+        socket.onmessage = event => {
+          const message = JSON.parse(event.data);
+          if (message.event !== "sendToPropertyInspector" || message.payload?.type !== "scene-options") return;
+          const select = document.querySelector("#scene");
+          select.replaceChildren(new Option("Select scene…", ""));
+          const slots = document.createElement("optgroup");
+          slots.label = "Live scene slots";
+          for (let slot = 1; slot <= 8; slot++) {
+            const liveScene = message.payload.liveScenes?.[slot - 1];
+            const label = `Live scene slot ${slot} (auto)${liveScene ? `: ${liveScene}` : ""}`;
+            slots.append(new Option(label, `slot:${slot}`));
+          }
+          select.add(slots);
+          const scenes = document.createElement("optgroup");
+          scenes.label = "Explicit OBS scenes";
+          for (const scene of message.payload.scenes || []) scenes.append(new Option(scene, `scene:${scene}`));
+          select.add(scenes);
+          select.value = selected;
+        };
+      }
+      function sendToPlugin(payload) {
+        socket?.send(JSON.stringify({ action: actionInfo.action, event: "sendToPlugin", context: actionInfo.context, payload }));
+      }
+      document.querySelector("#scene").addEventListener("change", event => {
+        selected = event.target.value;
+        if (selected.startsWith("slot:")) {
+          sendToPlugin({ type: "set-scene", slot: Number(selected.slice(5)) });
+        } else if (selected.startsWith("scene:")) {
+          sendToPlugin({ type: "set-scene", scene: selected.slice(6) });
+        } else {
+          sendToPlugin({ type: "set-scene", clear: true });
+        }
+      });
+    </script>
+  </body>
+</html>

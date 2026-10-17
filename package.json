@@ -1,0 +1,37 @@
+{
+  "name": "simracecenter-streamdeck",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "build": "node scripts/build-profile.mjs && rollup -c",
+    "build:profile": "node scripts/build-profile.mjs",
+    "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.simracecenter.director\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "validate": "streamdeck validate com.simracecenter.director.sdPlugin --no-update-check",
+    "pack": "streamdeck pack com.simracecenter.director.sdPlugin --output dist --force --no-update-check"
+  },
+  "dependencies": {
+    "@elgato/streamdeck": "^3.0.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@elgato/cli": "^1.10.2",
+    "@rollup/plugin-commonjs": "^29.0.2",
+    "@rollup/plugin-node-resolve": "^15.2.2",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-typescript": "^12.1.0",
+    "@tsconfig/node24": "^24.0.5",
+    "@types/node": "~24.1.0",
+    "@types/ws": "^8.18.2",
+    "fflate": "^0.8.3",
+    "rollup": "^4.0.2",
+    "tslib": "^2.6.2",
+    "typescript": "^5.2.2",
+    "vitest": "^5.0.5",
+    "ws": "^8.18.3"
+  }
+}
