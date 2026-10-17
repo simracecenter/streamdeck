@@ -16,9 +16,11 @@
     <script>
       let socket;
       let actionInfo;
+      let inspectorUUID;
       let selected = "";
       function connectElgatoStreamDeckSocket(port, pluginUUID, registerEvent, _info, rawActionInfo) {
         actionInfo = JSON.parse(rawActionInfo);
+        inspectorUUID = pluginUUID;
         const settings = actionInfo.payload?.settings || {};
         selected = typeof settings.scene === "string" && settings.scene.trim()
           ? `scene:${settings.scene}`
@@ -48,7 +50,7 @@
         };
       }
       function sendToPlugin(payload) {
-        socket?.send(JSON.stringify({ action: actionInfo.action, event: "sendToPlugin", context: actionInfo.context, payload }));
+        socket?.send(JSON.stringify({ action: actionInfo.action, event: "sendToPlugin", context: inspectorUUID, payload }));
       }
       document.querySelector("#scene").addEventListener("change", event => {
         selected = event.target.value;

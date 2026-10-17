@@ -52,7 +52,7 @@ export class FakeStreamDeckHost {
     });
     const info = {
       application: { font: "", language: "en", platform: "windows", platformVersion: "10", version: "7.6.0.23012" },
-      plugin: { uuid: pluginUuid, version: "0.1.0.0" },
+      plugin: { uuid: pluginUuid, version: "0.1.1.0" },
       devicePixelRatio: 1,
       colors: {},
       devices: [{ id: "DEV1", name: "Fake Deck", size: { columns: 5, rows: 3 }, type: 0 }],
