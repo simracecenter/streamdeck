@@ -24,8 +24,10 @@
     <script>
       let socket;
       let actionInfo;
+      let inspectorUUID;
       function connectElgatoStreamDeckSocket(port, pluginUUID, registerEvent, _info, rawActionInfo) {
         actionInfo = JSON.parse(rawActionInfo);
+        inspectorUUID = pluginUUID;
         socket = new WebSocket(`ws://127.0.0.1:${port}`);
         socket.onopen = () => socket.send(JSON.stringify({ event: registerEvent, uuid: pluginUUID }));
         socket.onmessage = event => {
@@ -39,7 +41,7 @@
         };
       }
       function sendToPlugin(payload) {
-        socket?.send(JSON.stringify({ action: actionInfo.action, event: "sendToPlugin", context: actionInfo.context, payload }));
+        socket?.send(JSON.stringify({ action: actionInfo.action, event: "sendToPlugin", context: inspectorUUID, payload }));
       }
       document.querySelector("#pair").addEventListener("click", () => {
         document.querySelector("#result").textContent = "Pairing…";
