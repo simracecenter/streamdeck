@@ -3,6 +3,7 @@ import streamDeck from "@elgato/streamdeck";
 import {
   AllStopAction,
   ConnectionAction,
+  FocusWeightAction,
   ObsRecordAction,
   ObsSceneAction,
   ObsStreamAction,
@@ -38,6 +39,7 @@ for (const action of [
   new ObsStreamAction(connection),
   new ObsRecordAction(connection),
   new ServiceAction(connection),
+  new FocusWeightAction(connection),
   new ConnectionAction(connection),
 ]) {
   streamDeck.actions.registerAction(action);

@@ -1,0 +1,65 @@
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Director Focus Weight</title>
+    <style>
+      body { margin: 12px; background: #202225; color: #f5f5f5; font: 13px sans-serif; }
+      label { display: block; margin: 8px 0 5px; }
+      select, input { box-sizing: border-box; width: 100%; padding: 7px; }
+      p { color: #b9bbbe; margin: 10px 0 0; }
+    </style>
+  </head>
+  <body>
+    <label for="mode">Key mode</label>
+    <select id="mode">
+      <option value="preset">Preset — jump to a weight</option>
+      <option value="step">Step — nudge the weight</option>
+    </select>
+    <label for="value" id="value-label">Weight (%)</label>
+    <input id="value" type="number" min="0" max="100" step="5" value="50">
+    <p id="current">Director focus weight: —</p>
+    <script>
+      let socket;
+      let actionInfo;
+      let inspectorUUID;
+      const mode = document.querySelector("#mode");
+      const value = document.querySelector("#value");
+      const valueLabel = document.querySelector("#value-label");
+      function syncLabel() {
+        const step = mode.value === "step";
+        valueLabel.textContent = step ? "Step (%, negative lowers)" : "Weight (%)";
+        value.min = step ? "-100" : "0";
+      }
+      function connectElgatoStreamDeckSocket(port, pluginUUID, registerEvent, _info, rawActionInfo) {
+        actionInfo = JSON.parse(rawActionInfo);
+        inspectorUUID = pluginUUID;
+        const settings = actionInfo.payload?.settings || {};
+        mode.value = settings.focusMode === "step" ? "step" : "preset";
+        if (typeof settings.focusValue === "number") value.value = String(Math.round(settings.focusValue * 100));
+        syncLabel();
+        socket = new WebSocket(`ws://127.0.0.1:${port}`);
+        socket.onopen = () => socket.send(JSON.stringify({ event: registerEvent, uuid: pluginUUID }));
+        socket.onmessage = event => {
+          const message = JSON.parse(event.data);
+          if (message.event !== "sendToPropertyInspector" || message.payload?.type !== "focus-options") return;
+          const coverage = message.payload.coverage;
+          document.querySelector("#current").textContent = coverage
+            ? `Director focus weight: ${Math.round(coverage.focusWeight * 100)}%`
+            : "Director focus weight: —";
+        };
+      }
+      function sendToPlugin(payload) {
+        socket?.send(JSON.stringify({ action: actionInfo.action, event: "sendToPlugin", context: inspectorUUID, payload }));
+      }
+      function commit() {
+        const percent = Number(value.value);
+        if (!Number.isFinite(percent)) return;
+        sendToPlugin({ type: "set-focus", focusMode: mode.value, focusValue: percent / 100 });
+      }
+      mode.addEventListener("change", () => { syncLabel(); commit(); });
+      value.addEventListener("change", commit);
+    </script>
+  </body>
+</html>

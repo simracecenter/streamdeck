@@ -17,6 +17,8 @@ export const controlCommandSchema = z.discriminatedUnion("command", [
   z.object({ command: z.literal("service.start"), args: z.object({ id: serviceIdSchema }).strict() }).strict(),
   z.object({ command: z.literal("service.stop"), args: z.object({ id: serviceIdSchema }).strict() }).strict(),
   z.object({ command: z.literal("service.restart"), args: z.object({ id: z.literal("spectator") }).strict() }).strict(),
+  z.object({ command: z.literal("coverage.setFocusWeight"), args: z.object({ weight: z.number().min(0).max(1) }).strict() }).strict(),
+  z.object({ command: z.literal("coverage.adjustFocusWeight"), args: z.object({ delta: z.number().min(-1).max(1) }).strict() }).strict(),
 ]);
 export type ControlCommand = z.infer<typeof controlCommandSchema>;
 
@@ -33,6 +35,8 @@ export const controlCommandIds = [
   "service.start",
   "service.stop",
   "service.restart",
+  "coverage.setFocusWeight",
+  "coverage.adjustFocusWeight",
 ] as const;
 export const CONTROL_COMMAND_IDS = controlCommandIds;
 export const CONTROL_SERVICE_IDS = ["youtubeChat", "chatAgent", "spectator"] as const;
@@ -60,6 +64,11 @@ export const controlStateSchema = z.object({
     liveScenes: z.array(z.string()),
     streaming: z.boolean().nullable(),
     recording: z.boolean().nullable(),
+  }).strict(),
+  /** Operator coverage controls (ADR 0023 amendment): focus-driver weight 0..1 and camera-steer profile. */
+  coverage: z.object({
+    focusWeight: z.number().min(0).max(1),
+    profile: z.enum(["balanced", "prefer_off_board"]),
   }).strict(),
   services: z.array(z.object({
     id: serviceIdSchema,

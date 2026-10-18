@@ -40,7 +40,7 @@ describe("DirectorConnection", () => {
           if (calls <= 4) throw new DirectorCommandError(0, "offline");
           return capabilities([
             "run.preflight", "run.start", "run.pause", "run.resume", "run.stop", "run.allStop",
-            "obs.setScene", "obs.setStream", "obs.setRecord", "service.start", "service.stop", "service.restart",
+            "obs.setScene", "obs.setStream", "obs.setRecord", "service.start", "service.stop", "service.restart", "coverage.setFocusWeight", "coverage.adjustFocusWeight",
           ]);
         },
         subscribe: async function* (signal?: AbortSignal) {
@@ -81,7 +81,7 @@ describe("DirectorConnection", () => {
         command: async () => ({ ok: true, detail: "", state: initialState() }),
         capabilities: async () => capabilities([
           "run.preflight", "run.start", "run.pause", "run.resume", "run.stop", "run.allStop",
-          "obs.setScene", "obs.setStream", "obs.setRecord", "service.start", "service.stop", "service.restart",
+          "obs.setScene", "obs.setStream", "obs.setRecord", "service.start", "service.stop", "service.restart", "coverage.setFocusWeight", "coverage.adjustFocusWeight",
         ]),
         subscribe: async function* () { yield invalidState; },
       }),
