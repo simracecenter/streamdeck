@@ -13,9 +13,21 @@ export type ActionId =
   | "obs-stream"
   | "obs-record"
   | "service"
+  | "focus-weight"
   | "connection";
 
-export type ActionSettings = { scene?: string; slot?: number; serviceId?: string };
+/** Focus-weight keys: `preset` jumps to `value` (0..1); `step` nudges by `value` (signed, e.g. 0.05). */
+export type FocusMode = "preset" | "step";
+export type ActionSettings = { scene?: string; slot?: number; serviceId?: string; focusMode?: FocusMode; focusValue?: number };
+
+export function focusPercent(weight: number): string {
+  return `${Math.round(weight * 100)}%`;
+}
+
+export function focusPresetLabel(weight: number): string {
+  return weight <= 0 ? "NATURAL" : weight >= 1 ? "FULL" : weight === 0.5 ? "BALANCED" : focusPercent(weight);
+}
+
 export interface RenderedAction {
   title: string;
   state: 0 | 1;
@@ -107,6 +119,21 @@ export function render(
       if (!service) return { title: "SELECT\nSERVICE", state: 0, image: images.grey };
       const title = `${service.label}\n${service.state.toUpperCase()}`;
       return { title, state: service.state === "running" ? 1 : 0, image: service.state === "running" ? images.green : images.grey };
+    }
+    case "focus-weight": {
+      const current = state.coverage.focusWeight;
+      const value = settings.focusValue;
+      if (settings.focusMode === "step" && typeof value === "number" && value !== 0) {
+        return { title: `FOCUS ${value > 0 ? "+" : "−"}${focusPercent(Math.abs(value))}
+${focusPercent(current)}`, state: 0, image: images.grey };
+      }
+      if (settings.focusMode === "preset" && typeof value === "number") {
+        const selected = Math.round(current * 100) === Math.round(value * 100);
+        return { title: `FOCUS
+${focusPresetLabel(value)}`, state: selected ? 1 : 0, image: selected ? images.green : images.grey };
+      }
+      return { title: `FOCUS
+${focusPercent(current)}`, state: 0, image: images.grey };
     }
     case "connection":
       return { title: "CONNECTED", state: 0, image: images.green };

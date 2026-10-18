@@ -63,4 +63,16 @@ describe("render", () => {
   it("shows the preflight warning but does not suppress start", () => {
     expect(render("start-run", "connected", initialState()).title).toBe("NEEDS\nPREFLT");
   });
+
+  it("renders focus-weight presets, steps and the live readout", () => {
+    const state = initialState();
+    expect(render("focus-weight", "connected", state)).toMatchObject({ title: "FOCUS\n50%", state: 0 });
+    expect(render("focus-weight", "connected", state, { focusMode: "preset", focusValue: 0.5 })).toMatchObject({ title: "FOCUS\nBALANCED", state: 1, image: "imgs/keys/green" });
+    expect(render("focus-weight", "connected", state, { focusMode: "preset", focusValue: 1 })).toMatchObject({ title: "FOCUS\nFULL", state: 0, image: "imgs/keys/grey" });
+    expect(render("focus-weight", "connected", state, { focusMode: "preset", focusValue: 0 }).title).toBe("FOCUS\nNATURAL");
+    expect(render("focus-weight", "connected", state, { focusMode: "step", focusValue: 0.05 }).title).toBe("FOCUS +5%\n50%");
+    expect(render("focus-weight", "connected", state, { focusMode: "step", focusValue: -0.1 }).title).toBe("FOCUS −10%\n50%");
+    state.coverage.focusWeight = 1;
+    expect(render("focus-weight", "connected", state, { focusMode: "preset", focusValue: 1 }).state).toBe(1);
+  });
 });

@@ -57,6 +57,11 @@ const inspectors = [
     action: "com.simracecenter.director.service",
     kind: "service",
   },
+  {
+    file: "focus-weight.html",
+    action: "com.simracecenter.director.focus-weight",
+    kind: "focus",
+  },
 ] as const;
 
 describe.each(inspectors)("$file", ({ file, action, kind }) => {
@@ -107,6 +112,15 @@ describe.each(inspectors)("$file", ({ file, action, kind }) => {
         const select = window.document.querySelector<HTMLSelectElement>("#scene")!;
         select.value = "scene:Race";
         select.dispatchEvent(new window.Event("change", { bubbles: true }));
+      } else if (kind === "focus") {
+        socket!.message({
+          event: "sendToPropertyInspector",
+          payload: { type: "focus-options", coverage: { focusWeight: 0.75, profile: "balanced" } },
+        });
+        expect(window.document.querySelector("#current")!.textContent).toContain("75%");
+        const value = window.document.querySelector<HTMLInputElement>("#value")!;
+        value.value = "100";
+        value.dispatchEvent(new window.Event("change", { bubbles: true }));
       } else {
         socket!.message({
           event: "sendToPropertyInspector",

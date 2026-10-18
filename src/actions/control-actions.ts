@@ -306,6 +306,33 @@ export class ServiceAction extends ControlAction {
   }
 }
 
+export class FocusWeightAction extends ControlAction {
+  override manifestId = "com.simracecenter.director.focus-weight";
+  constructor(connection: DirectorConnection) {
+    super(connection, "focus-weight");
+  }
+  override onKeyDown(event: KeyDownEvent<ActionData>): Promise<void> {
+    const { focusMode, focusValue } = event.payload.settings;
+    if (typeof focusValue !== "number" || !Number.isFinite(focusValue)) return this.showAlert(event.action, "Configure focus key");
+    if (focusMode === "step") {
+      return this.runCommand(event.action, () => this.connection.command("coverage.adjustFocusWeight", { delta: Math.max(-1, Math.min(1, focusValue)) }));
+    }
+    return this.runCommand(event.action, () => this.connection.command("coverage.setFocusWeight", { weight: Math.max(0, Math.min(1, focusValue)) }));
+  }
+  override async onPropertyInspectorDidAppear(_event: PropertyInspectorDidAppearEvent<ActionData>): Promise<void> {
+    const coverage = this.connection.snapshot().state?.coverage ?? null;
+    await streamDeck.ui.sendToPropertyInspector({ type: "focus-options", coverage });
+  }
+  override async onSendToPlugin(event: SendToPluginEvent<Record<string, any>, ActionData>): Promise<void> {
+    const value = event.payload as { type?: unknown; focusMode?: unknown; focusValue?: unknown };
+    if (value?.type !== "set-focus") return;
+    const focusMode = value.focusMode === "step" ? "step" : "preset";
+    const focusValue = typeof value.focusValue === "number" ? value.focusValue : Number(value.focusValue);
+    if (!Number.isFinite(focusValue)) return;
+    await event.action.setSettings({ focusMode, focusValue });
+  }
+}
+
 export class ConnectionAction extends ControlAction {
   override manifestId = "com.simracecenter.director.connection";
   constructor(connection: DirectorConnection) {

@@ -13,6 +13,7 @@ const obsScene = `${pluginUuid}.obs-scene`;
 const obsStream = `${pluginUuid}.obs-stream`;
 const obsRecord = `${pluginUuid}.obs-record`;
 const service = `${pluginUuid}.service`;
+const focusWeight = `${pluginUuid}.focus-weight`;
 const connection = `${pluginUuid}.connection`;
 
 describe("built plugin with fake Stream Deck host", () => {
@@ -140,6 +141,37 @@ describe("built plugin with fake Stream Deck host", () => {
       host.messages.filter(item => item.event === "showOk" && item.context === "service").length >= 2);
     expect(director.commands.map(item => item.command)).toContain("service.start");
     expect(director.commands.map(item => item.command)).toContain("service.stop");
+  });
+
+  it("sets and nudges the focus weight from preset and step keys", async () => {
+    director = new FakeDirector();
+    await director.start();
+    host = new FakeStreamDeckHost();
+    await host.start();
+    host.send(connection, "willAppear", {}, "connection-context");
+    host.send(connection, "sendToPlugin", { type: "pair", directorUrl: director.url, code: "123456", name: "E2E Deck" }, "connection-context");
+    await host.waitFor(message => message.event === "setGlobalSettings");
+
+    host.send(focusWeight, "willAppear", { settings: { focusMode: "preset", focusValue: 1 } }, "focus-full");
+    await host.waitFor(message => message.event === "setTitle" && message.context === "focus-full" && (message.payload as any)?.title === "FOCUS\nFULL");
+    host.send(focusWeight, "keyDown", { settings: { focusMode: "preset", focusValue: 1 } }, "focus-full");
+    await host.waitFor(message => message.event === "showOk" && message.context === "focus-full");
+    expect(director.commands).toContainEqual({ command: "coverage.setFocusWeight", args: { weight: 1 } });
+    expect(director.state().coverage.focusWeight).toBe(1);
+    await host.waitFor(message => message.event === "setState" && message.context === "focus-full" && (message.payload as any)?.state === 1);
+
+    host.send(focusWeight, "willAppear", { settings: { focusMode: "step", focusValue: -0.05 } }, "focus-down");
+    await host.waitFor(message => message.event === "setTitle" && message.context === "focus-down" && (message.payload as any)?.title === "FOCUS −5%\n100%");
+    host.send(focusWeight, "keyDown", { settings: { focusMode: "step", focusValue: -0.05 } }, "focus-down");
+    await host.waitFor(message => message.event === "showOk" && message.context === "focus-down");
+    expect(director.commands).toContainEqual({ command: "coverage.adjustFocusWeight", args: { delta: -0.05 } });
+    expect(director.state().coverage.focusWeight).toBe(0.95);
+    await host.waitFor(message => message.event === "setTitle" && message.context === "focus-down" && (message.payload as any)?.title === "FOCUS −5%\n95%");
+
+    host.send(focusWeight, "willAppear", { settings: {} }, "focus-unset");
+    await host.waitFor(message => message.event === "setTitle" && message.context === "focus-unset" && (message.payload as any)?.title === "FOCUS\n95%");
+    host.send(focusWeight, "keyDown", { settings: {} }, "focus-unset");
+    await host.waitFor(message => message.event === "showAlert" && message.context === "focus-unset");
   });
 
   it("ignores duplicate keyDown events while a command is in flight", async () => {

@@ -30,6 +30,7 @@ use that host's local address and ensure the network is trusted.
 | OBS | OBS Stream | Starts streaming on press; hold to stop. |
 | OBS | OBS Record | Starts recording on press; hold to stop. |
 | Services | Service | Select YouTube Chat, Chat Agent, or Spectator; starts/stops when allowed. |
+| Coverage | Focus Weight | Preset key jumps the focus-driver weight (NATURAL 0% / BALANCED 50% / FULL 100% or any value); step key nudges it by ±n%. Title shows the live weight; needs a Director with `coverage.*` commands. |
 
 ## Bundled profile
 

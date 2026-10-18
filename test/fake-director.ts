@@ -29,6 +29,7 @@ export function initialState(): ControlState {
       streaming: false,
       recording: false,
     },
+    coverage: { focusWeight: 0.5, profile: "balanced" },
     services: [
       { id: "youtubeChat", label: "YT CHAT", state: "stopped", detail: null, canStart: true, canStop: false },
       { id: "chatAgent", label: "CHAT AGENT", state: "stopped", detail: null, canStart: true, canStop: false },
@@ -115,6 +116,7 @@ export class FakeDirector {
         commands: [
           "run.preflight", "run.start", "run.pause", "run.resume", "run.stop", "run.allStop",
           "obs.setScene", "obs.setStream", "obs.setRecord", "service.start", "service.stop", "service.restart",
+          "coverage.setFocusWeight", "coverage.adjustFocusWeight",
         ],
         services: ["youtubeChat", "chatAgent", "spectator"],
       });
@@ -196,6 +198,12 @@ export class FakeDirector {
           break;
         }
         case "service.restart":
+          break;
+        case "coverage.setFocusWeight":
+          state.coverage.focusWeight = command.args.weight;
+          break;
+        case "coverage.adjustFocusWeight":
+          state.coverage.focusWeight = Math.max(0, Math.min(1, Math.round((state.coverage.focusWeight + command.args.delta) * 1000) / 1000));
           break;
       }
     });

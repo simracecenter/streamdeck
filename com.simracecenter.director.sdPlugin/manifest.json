@@ -205,6 +205,26 @@
       ]
     },
     {
+      "Name": "Focus Weight",
+      "UUID": "com.simracecenter.director.focus-weight",
+      "Icon": "imgs/actions/focus",
+      "Tooltip": "Set or nudge the focus-driver coverage weight (NATURAL 0% … FULL 100%).",
+      "PropertyInspectorPath": "ui/focus-weight.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/grey",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "imgs/keys/green",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
       "Name": "Connection",
       "UUID": "com.simracecenter.director.connection",
       "Icon": "imgs/actions/connection",
