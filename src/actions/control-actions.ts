@@ -13,7 +13,7 @@ import { InFlightLock } from "../action-runner";
 import type { ControlState } from "../contract";
 import { DirectorConnection, type ConnectionSnapshot } from "../connection";
 import { HoldToFire } from "../hold";
-import { render, resolveObsScene, type ActionId, type ActionSettings } from "../render";
+import { render, resolveObsScene, type ActionId, type ActionSettings, type FocusMode } from "../render";
 
 type ActionData = ActionSettings;
 type CommandAction = KeyDownEvent<ActionData>["action"];
@@ -311,9 +311,14 @@ export class FocusWeightAction extends ControlAction {
   constructor(connection: DirectorConnection) {
     super(connection, "focus-weight");
   }
+  /** A key dropped from the action list arrives with empty settings; it is a BALANCED preset until the inspector says otherwise. */
+  override async onWillAppear(event: WillAppearEvent<ActionData>): Promise<void> {
+    const settings = focusSettings(event.payload.settings);
+    if (settings !== event.payload.settings) await event.action.setSettings(settings);
+    if (event.action.isKey()) await this.refreshKey(event.action, settings);
+  }
   override onKeyDown(event: KeyDownEvent<ActionData>): Promise<void> {
-    const { focusMode, focusValue } = event.payload.settings;
-    if (typeof focusValue !== "number" || !Number.isFinite(focusValue)) return this.showAlert(event.action, "Configure focus key");
+    const { focusMode, focusValue } = focusSettings(event.payload.settings);
     if (focusMode === "step") {
       return this.runCommand(event.action, () => this.connection.command("coverage.adjustFocusWeight", { delta: Math.max(-1, Math.min(1, focusValue)) }));
     }
@@ -331,6 +336,16 @@ export class FocusWeightAction extends ControlAction {
     if (!Number.isFinite(focusValue)) return;
     await event.action.setSettings({ focusMode, focusValue });
   }
+}
+
+const DEFAULT_FOCUS_SETTINGS: ActionData = { focusMode: "preset", focusValue: 0.5 };
+
+function focusSettings(settings: ActionData): ActionData & { focusMode: FocusMode; focusValue: number } {
+  const { focusMode, focusValue } = settings;
+  if (typeof focusValue === "number" && Number.isFinite(focusValue)) {
+    return { ...settings, focusMode: focusMode === "step" ? "step" : "preset", focusValue };
+  }
+  return { ...settings, ...DEFAULT_FOCUS_SETTINGS } as ActionData & { focusMode: FocusMode; focusValue: number };
 }
 
 export class ConnectionAction extends ControlAction {

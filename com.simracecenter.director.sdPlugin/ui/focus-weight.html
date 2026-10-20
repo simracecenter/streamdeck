@@ -40,7 +40,10 @@
         if (typeof settings.focusValue === "number") value.value = String(Math.round(settings.focusValue * 100));
         syncLabel();
         socket = new WebSocket(`ws://127.0.0.1:${port}`);
-        socket.onopen = () => socket.send(JSON.stringify({ event: registerEvent, uuid: pluginUUID }));
+        socket.onopen = () => {
+          socket.send(JSON.stringify({ event: registerEvent, uuid: pluginUUID }));
+          if (typeof settings.focusValue !== "number") commit();
+        };
         socket.onmessage = event => {
           const message = JSON.parse(event.data);
           if (message.event !== "sendToPropertyInspector" || message.payload?.type !== "focus-options") return;
