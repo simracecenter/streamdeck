@@ -168,10 +168,16 @@ describe("built plugin with fake Stream Deck host", () => {
     expect(director.state().coverage.focusWeight).toBe(0.95);
     await host.waitFor(message => message.event === "setTitle" && message.context === "focus-down" && (message.payload as any)?.title === "FOCUS −5%\n95%");
 
+    // A key dragged from the action list arrives with empty settings: it must work as BALANCED, not alert.
     host.send(focusWeight, "willAppear", { settings: {} }, "focus-unset");
-    await host.waitFor(message => message.event === "setTitle" && message.context === "focus-unset" && (message.payload as any)?.title === "FOCUS\n95%");
+    await host.waitFor(message => message.event === "setSettings" && message.context === "focus-unset"
+      && (message.payload as any)?.focusMode === "preset" && (message.payload as any)?.focusValue === 0.5);
+    await host.waitFor(message => message.event === "setTitle" && message.context === "focus-unset" && (message.payload as any)?.title === "FOCUS\nBALANCED");
     host.send(focusWeight, "keyDown", { settings: {} }, "focus-unset");
-    await host.waitFor(message => message.event === "showAlert" && message.context === "focus-unset");
+    await host.waitFor(message => message.event === "showOk" && message.context === "focus-unset");
+    expect(director.commands).toContainEqual({ command: "coverage.setFocusWeight", args: { weight: 0.5 } });
+    expect(director.state().coverage.focusWeight).toBe(0.5);
+    await host.waitFor(message => message.event === "setState" && message.context === "focus-unset" && (message.payload as any)?.state === 1);
   });
 
   it("ignores duplicate keyDown events while a command is in flight", async () => {

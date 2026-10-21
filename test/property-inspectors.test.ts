@@ -132,7 +132,15 @@ describe.each(inspectors)("$file", ({ file, action, kind }) => {
       }
 
       const pluginMessages = socket!.sent.filter(message => message.event === "sendToPlugin");
-      expect(pluginMessages).toHaveLength(1);
+      if (kind === "focus") {
+        // Empty settings are committed as the BALANCED preset on connect so a freshly dropped key works untouched.
+        expect(pluginMessages.map(message => message.payload)).toEqual([
+          { type: "set-focus", focusMode: "preset", focusValue: 0.5 },
+          { type: "set-focus", focusMode: "preset", focusValue: 1 },
+        ]);
+      } else {
+        expect(pluginMessages).toHaveLength(1);
+      }
       for (const message of pluginMessages) {
         expect(message.context).toBe("PI-UUID");
         expect(message.action).toBe(action);
