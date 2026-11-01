@@ -225,6 +225,80 @@
       ]
     },
     {
+      "Name": "Lights Auto",
+      "UUID": "com.simracecenter.director.lights-auto",
+      "Icon": "imgs/actions/lights",
+      "Tooltip": "Toggle automatic flag synchronization.",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/grey",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "imgs/keys/green",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "Name": "Lights Power",
+      "UUID": "com.simracecenter.director.lights-power",
+      "Icon": "imgs/actions/lights",
+      "Tooltip": "Toggle power for the configured lights.",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/grey",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "imgs/keys/green",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "Name": "Lights Brightness",
+      "UUID": "com.simracecenter.director.lights-brightness",
+      "Icon": "imgs/actions/lights",
+      "Tooltip": "Adjust the ambient brightness of all lights.",
+      "PropertyInspectorPath": "ui/lights-brightness.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/grey",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
+      "Name": "Lights Flag",
+      "UUID": "com.simracecenter.director.lights-flag",
+      "Icon": "imgs/actions/flag",
+      "Tooltip": "Hold or clear a manual flag display.",
+      "PropertyInspectorPath": "ui/lights-flag.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/keys/flag-green-dim",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "imgs/keys/flag-green",
+          "TitleAlignment": "middle"
+        }
+      ]
+    },
+    {
       "Name": "Connection",
       "UUID": "com.simracecenter.director.connection",
       "Icon": "imgs/actions/connection",

@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { FakeDirector, FAKE_TOKEN } from "../fake-director";
 import { FakeStreamDeckHost, pluginUuid } from "./fake-host";
+import { DirectorClient } from "../../src/director-client";
 
 const runStatus = `${pluginUuid}.run-status`;
 const preflight = `${pluginUuid}.preflight`;
@@ -14,6 +15,10 @@ const obsStream = `${pluginUuid}.obs-stream`;
 const obsRecord = `${pluginUuid}.obs-record`;
 const service = `${pluginUuid}.service`;
 const focusWeight = `${pluginUuid}.focus-weight`;
+const lightsAuto = `${pluginUuid}.lights-auto`;
+const lightsPower = `${pluginUuid}.lights-power`;
+const lightsBrightness = `${pluginUuid}.lights-brightness`;
+const lightsFlag = `${pluginUuid}.lights-flag`;
 const connection = `${pluginUuid}.connection`;
 
 describe("built plugin with fake Stream Deck host", () => {
@@ -178,6 +183,131 @@ describe("built plugin with fake Stream Deck host", () => {
     expect(director.commands).toContainEqual({ command: "coverage.setFocusWeight", args: { weight: 0.5 } });
     expect(director.state().coverage.focusWeight).toBe(0.5);
     await host.waitFor(message => message.event === "setState" && message.context === "focus-unset" && (message.payload as any)?.state === 1);
+  });
+
+  it("controls automatic sync, power, brightness, and hold-to-toggle flags", async () => {
+    director = new FakeDirector();
+    await director.start();
+    host = new FakeStreamDeckHost();
+    await host.start();
+    host.send(connection, "willAppear", {}, "connection-context");
+    host.send(connection, "sendToPlugin", {
+      type: "pair",
+      directorUrl: director.url,
+      code: "123456",
+      name: "Lights Deck",
+    }, "connection-context");
+    await host.waitFor(message => message.event === "setGlobalSettings");
+    await host.waitFor(message => message.event === "setTitle" && message.context === "connection-context"
+      && (message.payload as any)?.title === "CONNECTED");
+
+    const autoInitialRender = host.messages.length;
+    host.send(lightsAuto, "willAppear", {}, "lights-auto");
+    await host.waitFor(message => message.event === "setTitle" && message.context === "lights-auto"
+      && (message.payload as any)?.title === "AUTO\nOFF", 5_000, autoInitialRender);
+    const autoPress = host.messages.length;
+    host.send(lightsAuto, "keyDown", {}, "lights-auto");
+    await host.waitFor(message => message.event === "showOk" && message.context === "lights-auto", 5_000, autoPress);
+    await host.waitFor(message => message.event === "setState" && message.context === "lights-auto"
+      && (message.payload as any)?.state === 1, 5_000, autoPress);
+    expect(director.commands).toContainEqual({ command: "lights.setFlagSync", args: { enabled: true } });
+
+    const noLightsUpdate = host.messages.length;
+    director.setState(state => { state.lights.flagSync = false; state.lights.reachable = 0; });
+    host.send(lightsPower, "willAppear", {}, "lights-power");
+    await host.waitFor(message => message.event === "setTitle" && message.context === "lights-power"
+      && (message.payload as any)?.title === "NO\nLIGHTS", 5_000, noLightsUpdate);
+    const noLightsPress = host.messages.length;
+    host.send(lightsPower, "keyDown", {}, "lights-power");
+    await host.waitFor(message => message.event === "showAlert" && message.context === "lights-power", 5_000, noLightsPress);
+    expect(director.commands.some(command => command.command === "lights.setPower")).toBe(false);
+
+    const reachableLightsUpdate = host.messages.length;
+    director.setState(state => { state.lights.reachable = 1; });
+    await host.waitFor(message => message.event === "setTitle" && message.context === "lights-power"
+      && (message.payload as any)?.title === "LIGHTS\nON 1/1", 5_000, reachableLightsUpdate);
+    await host.waitFor(message => message.event === "setState" && message.context === "lights-power"
+      && (message.payload as any)?.state === 1, 5_000, reachableLightsUpdate);
+    const powerPress = host.messages.length;
+    host.send(lightsPower, "keyDown", {}, "lights-power");
+    await host.waitFor(message => message.event === "showOk" && message.context === "lights-power", 5_000, powerPress);
+    await host.waitFor(message => message.event === "setTitle" && message.context === "lights-power"
+      && (message.payload as any)?.title === "LIGHTS\nOFF", 5_000, powerPress);
+    await host.waitFor(message => message.event === "setState" && message.context === "lights-power"
+      && (message.payload as any)?.state === 0, 5_000, powerPress);
+    expect(director.commands).toContainEqual({ command: "lights.setPower", args: { on: false } });
+
+    const brightnessInitialRender = host.messages.length;
+    host.send(lightsBrightness, "willAppear", {}, "lights-brightness");
+    await host.waitFor(message => message.event === "setTitle" && message.context === "lights-brightness"
+      && (message.payload as any)?.title === "BRIGHT +10\n80%", 5_000, brightnessInitialRender);
+    const brightnessUpPress = host.messages.length;
+    host.send(lightsBrightness, "keyDown", {}, "lights-brightness");
+    await host.waitFor(message => message.event === "showOk" && message.context === "lights-brightness", 5_000, brightnessUpPress);
+    await host.waitFor(message => message.event === "setTitle" && message.context === "lights-brightness"
+      && (message.payload as any)?.title === "BRIGHT +10\n90%", 5_000, brightnessUpPress);
+    expect(director.commands).toContainEqual({ command: "lights.adjustBrightness", args: { delta: 10 } });
+    expect(director.state().lights.brightness).toBe(90);
+
+    const brightnessDownInitialRender = host.messages.length;
+    host.send(lightsBrightness, "willAppear", { settings: { lightsDelta: -10 } }, "lights-brightness-down");
+    await host.waitFor(message => message.event === "setTitle" && message.context === "lights-brightness-down"
+      && (message.payload as any)?.title === "BRIGHT −10\n90%", 5_000, brightnessDownInitialRender);
+    const brightnessDownPress = host.messages.length;
+    host.send(lightsBrightness, "keyDown", { settings: { lightsDelta: -10 } }, "lights-brightness-down");
+    await host.waitFor(message => message.event === "showOk" && message.context === "lights-brightness-down", 5_000, brightnessDownPress);
+    await host.waitFor(message => message.event === "setTitle" && message.context === "lights-brightness-down"
+      && (message.payload as any)?.title === "BRIGHT −10\n80%", 5_000, brightnessDownPress);
+    expect(director.commands).toContainEqual({ command: "lights.adjustBrightness", args: { delta: -10 } });
+    expect(director.state().lights.brightness).toBe(80);
+
+    const greenInitialRender = host.messages.length;
+    host.send(lightsFlag, "willAppear", {}, "lights-flag");
+    await host.waitFor(message => message.event === "setTitle" && message.context === "lights-flag"
+      && (message.payload as any)?.title === "GREEN", 5_000, greenInitialRender);
+    const greenPress = host.messages.length;
+    host.send(lightsFlag, "keyDown", {}, "lights-flag");
+    await host.waitFor(message => message.event === "showOk" && message.context === "lights-flag", 5_000, greenPress);
+    await host.waitFor(message => message.event === "setState" && message.context === "lights-flag"
+      && (message.payload as any)?.state === 1, 5_000, greenPress);
+    expect(director.commands).toContainEqual({ command: "lights.showFlag", args: { flag: "green" } });
+    expect(director.state().lights.manualFlag).toBe("green");
+
+    const greenToggleOffPress = host.messages.length;
+    host.send(lightsFlag, "keyDown", { settings: { lightsFlag: "green" } }, "lights-flag");
+    await host.waitFor(message => message.event === "showOk" && message.context === "lights-flag", 5_000, greenToggleOffPress);
+    await host.waitFor(message => message.event === "setState" && message.context === "lights-flag"
+      && (message.payload as any)?.state === 0, 5_000, greenToggleOffPress);
+    expect(director.commands).toContainEqual({ command: "lights.showFlag", args: { flag: null } });
+    expect(director.state().lights.manualFlag).toBeNull();
+
+    const clearInitialRender = host.messages.length;
+    host.send(lightsFlag, "willAppear", { settings: { lightsFlag: "clear" } }, "lights-flag-clear");
+    await host.waitFor(message => message.event === "setTitle" && message.context === "lights-flag-clear"
+      && (message.payload as any)?.title === "CLEAR", 5_000, clearInitialRender);
+    const clearPress = host.messages.length;
+    host.send(lightsFlag, "keyDown", { settings: { lightsFlag: "clear" } }, "lights-flag-clear");
+    await host.waitFor(message => message.event === "showOk" && message.context === "lights-flag-clear", 5_000, clearPress);
+    expect(director.commands).toContainEqual({ command: "lights.showFlag", args: { flag: null } });
+
+    const autoLockUpdate = host.messages.length;
+    director.setState(state => { state.lights.flagSync = true; });
+    await host.waitFor(message => message.event === "setTitle" && message.context === "lights-auto"
+      && String((message.payload as any)?.title).startsWith("AUTO\n"), 5_000, autoLockUpdate);
+    await host.waitFor(message => message.event === "setState" && message.context === "lights-auto"
+      && (message.payload as any)?.state === 1, 5_000, autoLockUpdate);
+    const manualCommandCount = director.commands.filter(command => command.command === "lights.showFlag").length;
+    const yellowSettings = { lightsFlag: "yellow" };
+    const lockedFlagInitialRender = host.messages.length;
+    host.send(lightsFlag, "willAppear", { settings: yellowSettings }, "lights-auto-locked");
+    await host.waitFor(message => message.event === "setTitle" && message.context === "lights-auto-locked"
+      && (message.payload as any)?.title === "YELLOW", 5_000, lockedFlagInitialRender);
+    const lockedFlagPress = host.messages.length;
+    host.send(lightsFlag, "keyDown", { settings: yellowSettings }, "lights-auto-locked");
+    await host.waitFor(message => message.event === "showAlert" && message.context === "lights-auto-locked", 5_000, lockedFlagPress);
+    expect(director.commands.filter(command => command.command === "lights.showFlag")).toHaveLength(manualCommandCount);
+    await expect(new DirectorClient(director.url, FAKE_TOKEN).command("lights.showFlag", { flag: "yellow" }))
+      .rejects.toThrow("Lights are on AUTO (flag sync)");
   });
 
   it("ignores duplicate keyDown events while a command is in flight", async () => {

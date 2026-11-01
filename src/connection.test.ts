@@ -4,6 +4,7 @@ import type { ControlState } from "./contract";
 import { DirectorConnection, isCompatible } from "./connection";
 import { DirectorCommandError } from "./director-client";
 import { initialState } from "../test/fake-director";
+import { controlCommandIds, controlCommandSchema, controlStateSchema } from "./contract";
 
 function capabilities(commands: string[]) {
   return {
@@ -16,6 +17,27 @@ function capabilities(commands: string[]) {
 
 describe("DirectorConnection", () => {
   afterEach(() => vi.useRealTimers());
+
+  it("mirrors the strict lights commands and state", () => {
+    expect(controlCommandIds).toEqual(expect.arrayContaining([
+      "lights.setFlagSync", "lights.setPower", "lights.adjustBrightness", "lights.showFlag",
+    ]));
+    expect(controlCommandSchema.safeParse({ command: "lights.setFlagSync", args: { enabled: true } }).success).toBe(true);
+    expect(controlCommandSchema.safeParse({ command: "lights.setPower", args: { on: false } }).success).toBe(true);
+    expect(controlCommandSchema.safeParse({ command: "lights.adjustBrightness", args: { delta: -100 } }).success).toBe(true);
+    expect(controlCommandSchema.safeParse({ command: "lights.adjustBrightness", args: { delta: 0 } }).success).toBe(false);
+    expect(controlCommandSchema.safeParse({ command: "lights.showFlag", args: { flag: "focus" } }).success).toBe(true);
+    expect(controlStateSchema.parse(initialState()).lights).toMatchObject({
+      configured: 1,
+      reachable: 1,
+      flagSync: false,
+      manualFlag: null,
+      allStop: false,
+      power: true,
+      brightness: 80,
+    });
+    expect(controlStateSchema.safeParse({ ...initialState(), lights: { ...initialState().lights, extra: true } }).success).toBe(false);
+  });
 
   it("classifies unsupported APIs and missing commands as incompatible", () => {
     expect(isCompatible({ ...capabilities(["run.start"]), api: 2 })).toBe(false);
@@ -41,6 +63,7 @@ describe("DirectorConnection", () => {
           return capabilities([
             "run.preflight", "run.start", "run.pause", "run.resume", "run.stop", "run.allStop",
             "obs.setScene", "obs.setStream", "obs.setRecord", "service.start", "service.stop", "service.restart", "coverage.setFocusWeight", "coverage.adjustFocusWeight",
+            "lights.setFlagSync", "lights.setPower", "lights.adjustBrightness", "lights.showFlag",
           ]);
         },
         subscribe: async function* (signal?: AbortSignal) {
@@ -82,6 +105,7 @@ describe("DirectorConnection", () => {
         capabilities: async () => capabilities([
           "run.preflight", "run.start", "run.pause", "run.resume", "run.stop", "run.allStop",
           "obs.setScene", "obs.setStream", "obs.setRecord", "service.start", "service.stop", "service.restart", "coverage.setFocusWeight", "coverage.adjustFocusWeight",
+          "lights.setFlagSync", "lights.setPower", "lights.adjustBrightness", "lights.showFlag",
         ]),
         subscribe: async function* () { yield invalidState; },
       }),

@@ -1,0 +1,51 @@
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Lights Flag</title>
+    <style>
+      body { margin: 12px; background: #202225; color: #f5f5f5; font: 13px sans-serif; }
+      label { display: block; margin-bottom: 5px; }
+      select { box-sizing: border-box; width: 100%; padding: 7px; }
+    </style>
+  </head>
+  <body>
+    <label for="flag">Flag to hold</label>
+    <select id="flag">
+      <option value="green">Green</option>
+      <option value="yellow">Yellow</option>
+      <option value="blue">Blue</option>
+      <option value="white">White</option>
+      <option value="red">Red</option>
+      <option value="checkered">Checkered</option>
+      <option value="debris">Debris</option>
+      <option value="focus">Focus</option>
+      <option value="clear">Clear</option>
+    </select>
+    <script>
+      let socket;
+      let actionInfo;
+      let inspectorUUID;
+      const select = document.querySelector("#flag");
+      function connectElgatoStreamDeckSocket(port, pluginUUID, registerEvent, _info, rawActionInfo) {
+        actionInfo = JSON.parse(rawActionInfo);
+        inspectorUUID = pluginUUID;
+        const settings = actionInfo.payload?.settings || {};
+        select.value = typeof settings.lightsFlag === "string" ? settings.lightsFlag : "green";
+        socket = new WebSocket(`ws://127.0.0.1:${port}`);
+        socket.onopen = () => {
+          socket.send(JSON.stringify({ event: registerEvent, uuid: pluginUUID }));
+          if (typeof settings.lightsFlag !== "string") commit();
+        };
+      }
+      function sendToPlugin(payload) {
+        socket?.send(JSON.stringify({ action: actionInfo.action, event: "sendToPlugin", context: inspectorUUID, payload }));
+      }
+      function commit() {
+        sendToPlugin({ type: "set-lights-flag", lightsFlag: select.value });
+      }
+      select.addEventListener("change", commit);
+    </script>
+  </body>
+</html>

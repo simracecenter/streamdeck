@@ -6,6 +6,7 @@ import { render, type ActionId } from "./render";
 const ids: ActionId[] = [
   "run-status", "preflight", "start-run", "pause-resume", "stop-run", "all-stop",
   "obs-scene", "obs-stream", "obs-record", "service", "connection",
+  "lights-auto", "lights-power", "lights-brightness", "lights-flag",
 ];
 
 describe("render", () => {
@@ -75,4 +76,55 @@ describe("render", () => {
     state.coverage.focusWeight = 1;
     expect(render("focus-weight", "connected", state, { focusMode: "preset", focusValue: 1 }).state).toBe(1);
   });
+
+  it("renders AUTO, power, and brightness status", () => {
+    const state = initialState();
+    expect(render("lights-auto", "connected", state)).toMatchObject({ title: "AUTO\nOFF", state: 0, image: "imgs/keys/grey" });
+    state.lights.flagSync = true;
+    state.lights.flag = "yellow";
+    expect(render("lights-auto", "connected", state)).toMatchObject({ title: "AUTO\nYELLOW", state: 1, image: "imgs/keys/green" });
+    state.lights.allStop = true;
+    expect(render("lights-auto", "connected", state)).toMatchObject({ title: "AUTO\nALL STOP", state: 1, image: "imgs/keys/red" });
+
+    expect(render("lights-power", "connected", state)).toMatchObject({ title: "LIGHTS\nON 1/1", state: 1, image: "imgs/keys/green" });
+    state.lights.power = false;
+    expect(render("lights-power", "connected", state)).toMatchObject({ title: "LIGHTS\nOFF", state: 0, image: "imgs/keys/grey" });
+    state.lights.reachable = 0;
+    expect(render("lights-power", "connected", state)).toMatchObject({ title: "NO\nLIGHTS", image: "imgs/keys/amber" });
+    state.lights.reachable = 1;
+    state.lights.configured = 0;
+    expect(render("lights-power", "connected", state).title).toBe("NO\nLIGHTS");
+
+    state.lights.configured = 1;
+    expect(render("lights-brightness", "connected", state)).toMatchObject({ title: "BRIGHT +10\n80%", state: 0 });
+    expect(render("lights-brightness", "connected", state, { lightsDelta: -25 }).title).toBe("BRIGHT −25\n80%");
+    state.lights.brightness = null;
+    expect(render("lights-brightness", "connected", state, { lightsDelta: 0 }).title).toBe("BRIGHT +10\n—");
+  });
+
+  it("renders selected, automatic, incident, and clear manual flags", () => {
+    const state = initialState();
+    expect(render("lights-flag", "connected", state)).toMatchObject({ title: "GREEN", state: 0, image: "imgs/keys/flag-green-dim" });
+    state.lights.manualFlag = "yellow";
+    expect(render("lights-flag", "connected", state, { lightsFlag: "yellow" }))
+      .toMatchObject({ title: "YELLOW", state: 1, image: "imgs/keys/flag-yellow" });
+    state.lights.manualFlag = null;
+    state.lights.flagSync = true;
+    state.lights.flag = "blue";
+    expect(render("lights-flag", "connected", state, { lightsFlag: "blue" }).state).toBe(1);
+    state.lights.effect = "focus-incident";
+    expect(render("lights-flag", "connected", state, { lightsFlag: "focus" }))
+      .toMatchObject({ title: "FOCUS", state: 1, image: "imgs/keys/flag-focus" });
+    expect(render("lights-flag", "connected", state, { lightsFlag: "clear" }))
+      .toMatchObject({ title: "CLEAR", state: 0, image: "imgs/keys/flag-clear-dim" });
+  });
+
+  it.each(["green", "yellow", "blue", "white", "red", "checkered", "debris", "focus"] as const)(
+    "renders a held %s flag as lit", flag => {
+      const state = initialState();
+      state.lights.manualFlag = flag;
+      expect(render("lights-flag", "connected", state, { lightsFlag: flag }))
+        .toMatchObject({ title: flag.toUpperCase(), state: 1, image: `imgs/keys/flag-${flag}` });
+    },
+  );
 });

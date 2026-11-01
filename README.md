@@ -31,20 +31,26 @@ use that host's local address and ensure the network is trusted.
 | OBS | OBS Record | Starts recording on press; hold to stop. |
 | Services | Service | Select YouTube Chat, Chat Agent, or Spectator; starts/stops when allowed. |
 | Coverage | Focus Weight | Preset key jumps the focus-driver weight (NATURAL 0% / BALANCED 50% / FULL 100% or any value); step key nudges it by ±n%. Title shows the live weight; needs a Director with `coverage.*` commands. |
+| LIGHTS | Lights Auto | Toggles Director flag synchronization; shows the current flag or ALL STOP. |
+| LIGHTS | Lights Power | Toggles the configured lights; reports reachable/configured devices. |
+| LIGHTS | Lights Brightness | Nudges ambient brightness by a configured ±5/10/25 percentage points (default +10). |
+| LIGHTS | Lights Flag | Holds or clears a manual flag; flag keys are locked while AUTO is on. |
 
 ## Bundled profile
 
 The plugin includes the **Sim RaceCenter** profile for the 15-key Stream Deck MK.2. It is bundled
-with the plugin package and has three pages with direct Go to Page navigation:
+with the plugin package and has four pages with direct Go to Page navigation:
 
 ```text
-Page 1 DIRECTOR                          Page 2 OBS                              Page 3 SERVICES
-[STATUS][PREFLT][START ][PAUSE ][STOP  ] [STREAM][RECORD][SCN 1 ][SCN 2 ][SCN 3 ] [YT CHT][CHT AG][SPECT ][      ][      ]
-[ALLSTP][      ][      ][      ][      ] [SCN 4 ][SCN 5 ][SCN 6 ][SCN 7 ][SCN 8 ] [      ][      ][      ][      ][      ]
-[PAGE 1][PAGE 2][PAGE 3][      ][CONN  ] [PAGE 1][PAGE 2][PAGE 3][STATUS][CONN  ] [PAGE 1][PAGE 2][PAGE 3][STATUS][CONN  ]
+Page 1 DIRECTOR                          Page 2 OBS                              Page 3 SERVICES                         Page 4 LIGHTS
+[STATUS][PREFLT][START ][PAUSE ][STOP  ] [STREAM][RECORD][SCN 1 ][SCN 2 ][SCN 3 ] [YT CHT][CHT AG][SPECT ][      ][      ] [AUTO  ][POWER ][BR -10][BR +10][CLEAR ]
+[ALLSTP][      ][      ][      ][      ] [SCN 4 ][SCN 5 ][SCN 6 ][SCN 7 ][SCN 8 ] [      ][      ][      ][      ][      ] [GREEN ][YELLOW][BLUE  ][WHITE ][RED   ]
+[PAGE 1][PAGE 2][PAGE 3][LIGHTS][CONN  ] [PAGE 1][PAGE 2][PAGE 3][STATUS][CONN  ] [PAGE 1][PAGE 2][PAGE 3][STATUS][CONN  ] [CHECK ][DEBRIS][FOCUS ][ALLSTP][BACK  ]
 ```
 
-Status and connection keys remain available on every page. Page 2's scene keys are configured as
+Preview images: [LIGHTS page](docs/lights-page-preview.png) · [flag key assets](docs/lights-key-assets-preview.png).
+
+Status and connection keys remain available on the original pages. Page 2's scene keys are configured as
 live-scene slots by default. Each slot resolves to the corresponding entry in Director's configured
 `obs.liveScenes` list, so changing the Director list does not require reconfiguring the deck. A slot
 that has no live scene displays `SCENE N` with an em dash and alerts if pressed. Explicit scene

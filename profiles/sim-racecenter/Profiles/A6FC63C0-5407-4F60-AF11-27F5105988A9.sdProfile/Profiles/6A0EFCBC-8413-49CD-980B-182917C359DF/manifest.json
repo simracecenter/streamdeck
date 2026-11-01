@@ -1,0 +1,26 @@
+{
+  "Controllers": [
+    {
+      "Actions": {
+        "0,0": {"ActionID":"36fbaa95-9f4c-43eb-96b4-76527bd5dc0f","LinkedTitle":true,"Name":"Lights Auto","Plugin":{"Name":"Sim RaceCenter Director","UUID":"com.simracecenter.director","Version":"0.1.1.0"},"Resources":null,"Settings":{},"State":0,"States":[{},{}],"UUID":"com.simracecenter.director.lights-auto"},
+        "1,0": {"ActionID":"a7141172-50bf-41e5-816b-62c4a4363e3e","LinkedTitle":true,"Name":"Lights Power","Plugin":{"Name":"Sim RaceCenter Director","UUID":"com.simracecenter.director","Version":"0.1.1.0"},"Resources":null,"Settings":{},"State":0,"States":[{},{}],"UUID":"com.simracecenter.director.lights-power"},
+        "2,0": {"ActionID":"bb39dbed-4ec4-42d4-aee1-8d104b0607bc","LinkedTitle":true,"Name":"Lights Brightness","Plugin":{"Name":"Sim RaceCenter Director","UUID":"com.simracecenter.director","Version":"0.1.1.0"},"Resources":null,"Settings":{"lightsDelta":-10},"State":0,"States":[{}],"UUID":"com.simracecenter.director.lights-brightness"},
+        "3,0": {"ActionID":"ac52111c-3c04-487a-b157-f9bb2d9b6ca1","LinkedTitle":true,"Name":"Lights Brightness","Plugin":{"Name":"Sim RaceCenter Director","UUID":"com.simracecenter.director","Version":"0.1.1.0"},"Resources":null,"Settings":{"lightsDelta":10},"State":0,"States":[{}],"UUID":"com.simracecenter.director.lights-brightness"},
+        "4,0": {"ActionID":"3ba50dba-23c8-439f-9162-2dc38f24f934","LinkedTitle":true,"Name":"Lights Flag","Plugin":{"Name":"Sim RaceCenter Director","UUID":"com.simracecenter.director","Version":"0.1.1.0"},"Resources":null,"Settings":{"lightsFlag":"clear"},"State":0,"States":[{},{}],"UUID":"com.simracecenter.director.lights-flag"},
+        "0,1": {"ActionID":"33eac916-28d5-4f2f-8383-e804ef8f72df","LinkedTitle":true,"Name":"Lights Flag","Plugin":{"Name":"Sim RaceCenter Director","UUID":"com.simracecenter.director","Version":"0.1.1.0"},"Resources":null,"Settings":{"lightsFlag":"green"},"State":0,"States":[{},{}],"UUID":"com.simracecenter.director.lights-flag"},
+        "1,1": {"ActionID":"3c383f72-6737-49bd-bdb5-bc4e659f5d12","LinkedTitle":true,"Name":"Lights Flag","Plugin":{"Name":"Sim RaceCenter Director","UUID":"com.simracecenter.director","Version":"0.1.1.0"},"Resources":null,"Settings":{"lightsFlag":"yellow"},"State":0,"States":[{},{}],"UUID":"com.simracecenter.director.lights-flag"},
+        "2,1": {"ActionID":"67801737-7529-4c23-8bf3-e46705aa63ba","LinkedTitle":true,"Name":"Lights Flag","Plugin":{"Name":"Sim RaceCenter Director","UUID":"com.simracecenter.director","Version":"0.1.1.0"},"Resources":null,"Settings":{"lightsFlag":"blue"},"State":0,"States":[{},{}],"UUID":"com.simracecenter.director.lights-flag"},
+        "3,1": {"ActionID":"5a43edf2-caa9-48d8-bd95-e80bb1c3499b","LinkedTitle":true,"Name":"Lights Flag","Plugin":{"Name":"Sim RaceCenter Director","UUID":"com.simracecenter.director","Version":"0.1.1.0"},"Resources":null,"Settings":{"lightsFlag":"white"},"State":0,"States":[{},{}],"UUID":"com.simracecenter.director.lights-flag"},
+        "4,1": {"ActionID":"ca38fbd9-ab58-49ca-9d0f-c7de9af85516","LinkedTitle":true,"Name":"Lights Flag","Plugin":{"Name":"Sim RaceCenter Director","UUID":"com.simracecenter.director","Version":"0.1.1.0"},"Resources":null,"Settings":{"lightsFlag":"red"},"State":0,"States":[{},{}],"UUID":"com.simracecenter.director.lights-flag"},
+        "0,2": {"ActionID":"36645d56-249e-4b0d-99e5-9bc10d296497","LinkedTitle":true,"Name":"Lights Flag","Plugin":{"Name":"Sim RaceCenter Director","UUID":"com.simracecenter.director","Version":"0.1.1.0"},"Resources":null,"Settings":{"lightsFlag":"checkered"},"State":0,"States":[{},{}],"UUID":"com.simracecenter.director.lights-flag"},
+        "1,2": {"ActionID":"a7a982ea-3925-4d29-8393-a2e30825da96","LinkedTitle":true,"Name":"Lights Flag","Plugin":{"Name":"Sim RaceCenter Director","UUID":"com.simracecenter.director","Version":"0.1.1.0"},"Resources":null,"Settings":{"lightsFlag":"debris"},"State":0,"States":[{},{}],"UUID":"com.simracecenter.director.lights-flag"},
+        "2,2": {"ActionID":"44f0b79b-96dc-4145-88f9-6e910a0a4236","LinkedTitle":true,"Name":"Lights Flag","Plugin":{"Name":"Sim RaceCenter Director","UUID":"com.simracecenter.director","Version":"0.1.1.0"},"Resources":null,"Settings":{"lightsFlag":"focus"},"State":0,"States":[{},{}],"UUID":"com.simracecenter.director.lights-flag"},
+        "3,2": {"ActionID":"7824d414-7128-464f-a7b0-d21c9d88a0db","LinkedTitle":true,"Name":"ALL STOP","Plugin":{"Name":"Sim RaceCenter Director","UUID":"com.simracecenter.director","Version":"0.1.1.0"},"Resources":null,"Settings":{},"State":0,"States":[{}],"UUID":"com.simracecenter.director.all-stop"},
+        "4,2": {"ActionID":"a1fbe8cc-2ea8-4c4a-8b45-0fda517a5731","LinkedTitle":true,"Name":"Go to Page","Plugin":{"Name":"Pages","UUID":"com.elgato.streamdeck.page","Version":"1.0"},"Resources":null,"Settings":{"PageIndex":1},"State":0,"States":[{}],"UUID":"com.elgato.streamdeck.page.goto"}
+      },
+      "Type": "Keypad"
+    }
+  ],
+  "Icon": "",
+  "Name": "LIGHTS"
+}

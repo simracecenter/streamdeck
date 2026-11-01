@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 import type { ConnectionStatus } from "./connection";
-import type { ControlState } from "./contract";
+import type { ControlState, ManualFlag } from "./contract";
 
 export type ActionId =
   | "run-status"
@@ -14,11 +14,23 @@ export type ActionId =
   | "obs-record"
   | "service"
   | "focus-weight"
+  | "lights-auto"
+  | "lights-power"
+  | "lights-brightness"
+  | "lights-flag"
   | "connection";
 
 /** Focus-weight keys: `preset` jumps to `value` (0..1); `step` nudges by `value` (signed, e.g. 0.05). */
 export type FocusMode = "preset" | "step";
-export type ActionSettings = { scene?: string; slot?: number; serviceId?: string; focusMode?: FocusMode; focusValue?: number };
+export type ActionSettings = {
+  scene?: string;
+  slot?: number;
+  serviceId?: string;
+  focusMode?: FocusMode;
+  focusValue?: number;
+  lightsDelta?: number;
+  lightsFlag?: ManualFlag | "clear";
+};
 
 export function focusPercent(weight: number): string {
   return `${Math.round(weight * 100)}%`;
@@ -135,7 +147,48 @@ ${focusPresetLabel(value)}`, state: selected ? 1 : 0, image: selected ? images.g
       return { title: `FOCUS
 ${focusPercent(current)}`, state: 0, image: images.grey };
     }
+    case "lights-auto":
+      return !state.lights.flagSync
+        ? { title: "AUTO\nOFF", state: 0, image: images.grey }
+        : state.lights.allStop
+          ? { title: "AUTO\nALL STOP", state: 1, image: images.red }
+          : { title: `AUTO\n${state.lights.flag.toUpperCase()}`, state: 1, image: images.green };
+    case "lights-power":
+      if (state.lights.configured === 0 || state.lights.reachable === 0) {
+        return { title: "NO\nLIGHTS", state: 0, image: images.amber };
+      }
+      return state.lights.power === true
+        ? { title: `LIGHTS\nON ${state.lights.reachable}/${state.lights.configured}`, state: 1, image: images.green }
+        : { title: "LIGHTS\nOFF", state: 0, image: images.grey };
+    case "lights-brightness": {
+      const delta = validLightsDelta(settings.lightsDelta) ? settings.lightsDelta : 10;
+      const signed = `${delta > 0 ? "+" : "−"}${Math.abs(delta)}`;
+      const brightness = state.lights.brightness === null ? "—" : `${state.lights.brightness}%`;
+      return { title: `BRIGHT ${signed}\n${brightness}`, state: 0, image: images.grey };
+    }
+    case "lights-flag": {
+      const flag = validLightsFlag(settings.lightsFlag) ? settings.lightsFlag : "green";
+      const lit = flag !== "clear" && (
+        state.lights.manualFlag === flag
+        || (state.lights.flagSync && state.lights.flag === flag)
+        || (flag === "focus" && state.lights.effect === "focus-incident")
+      );
+      return {
+        title: flag === "clear" ? "CLEAR" : flag.toUpperCase(),
+        state: lit ? 1 : 0,
+        image: `imgs/keys/flag-${flag}${lit ? "" : "-dim"}`,
+      };
+    }
     case "connection":
       return { title: "CONNECTED", state: 0, image: images.green };
   }
+}
+
+function validLightsDelta(value: number | undefined): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= -50 && value <= 50 && value !== 0;
+}
+
+function validLightsFlag(value: ActionSettings["lightsFlag"]): value is NonNullable<ActionSettings["lightsFlag"]> {
+  return value === "clear" || value === "green" || value === "yellow" || value === "blue"
+    || value === "white" || value === "red" || value === "checkered" || value === "debris" || value === "focus";
 }

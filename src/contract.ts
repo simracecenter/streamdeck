@@ -2,6 +2,14 @@
 // Semantically identical to Director src/shared/control-surface.ts; operator-control API version 1.
 import { z } from "zod";
 
+export const flagNames = ["none", "green", "yellow", "blue", "red", "debris", "white", "checkered", "black"] as const;
+export const flagNameSchema = z.enum(flagNames);
+export type FlagName = z.infer<typeof flagNameSchema>;
+
+export const manualFlagNames = ["green", "yellow", "blue", "white", "red", "checkered", "debris", "focus"] as const;
+export const manualFlagSchema = z.enum(manualFlagNames);
+export type ManualFlag = z.infer<typeof manualFlagSchema>;
+
 const serviceIdSchema = z.enum(["youtubeChat", "chatAgent", "spectator"]);
 
 export const controlCommandSchema = z.discriminatedUnion("command", [
@@ -19,6 +27,10 @@ export const controlCommandSchema = z.discriminatedUnion("command", [
   z.object({ command: z.literal("service.restart"), args: z.object({ id: z.literal("spectator") }).strict() }).strict(),
   z.object({ command: z.literal("coverage.setFocusWeight"), args: z.object({ weight: z.number().min(0).max(1) }).strict() }).strict(),
   z.object({ command: z.literal("coverage.adjustFocusWeight"), args: z.object({ delta: z.number().min(-1).max(1) }).strict() }).strict(),
+  z.object({ command: z.literal("lights.setFlagSync"), args: z.object({ enabled: z.boolean() }).strict() }).strict(),
+  z.object({ command: z.literal("lights.setPower"), args: z.object({ on: z.boolean() }).strict() }).strict(),
+  z.object({ command: z.literal("lights.adjustBrightness"), args: z.object({ delta: z.number().int().min(-100).max(100).refine(value => value !== 0) }).strict() }).strict(),
+  z.object({ command: z.literal("lights.showFlag"), args: z.object({ flag: manualFlagSchema.nullable() }).strict() }).strict(),
 ]);
 export type ControlCommand = z.infer<typeof controlCommandSchema>;
 
@@ -37,6 +49,10 @@ export const controlCommandIds = [
   "service.restart",
   "coverage.setFocusWeight",
   "coverage.adjustFocusWeight",
+  "lights.setFlagSync",
+  "lights.setPower",
+  "lights.adjustBrightness",
+  "lights.showFlag",
 ] as const;
 export const CONTROL_COMMAND_IDS = controlCommandIds;
 export const CONTROL_SERVICE_IDS = ["youtubeChat", "chatAgent", "spectator"] as const;
@@ -69,6 +85,17 @@ export const controlStateSchema = z.object({
   coverage: z.object({
     focusWeight: z.number().min(0).max(1),
     profile: z.enum(["balanced", "prefer_off_board"]),
+  }).strict(),
+  lights: z.object({
+    configured: z.number().int().min(0),
+    reachable: z.number().int().min(0),
+    flagSync: z.boolean(),
+    flag: flagNameSchema,
+    manualFlag: manualFlagSchema.nullable(),
+    effect: z.string().nullable(),
+    allStop: z.boolean(),
+    power: z.boolean().nullable(),
+    brightness: z.number().int().min(1).max(100).nullable(),
   }).strict(),
   services: z.array(z.object({
     id: serviceIdSchema,
