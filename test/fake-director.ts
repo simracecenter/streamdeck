@@ -30,6 +30,17 @@ export function initialState(): ControlState {
       recording: false,
     },
     coverage: { focusWeight: 0.5, profile: "balanced" },
+    lights: {
+      configured: 1,
+      reachable: 1,
+      flagSync: false,
+      flag: "none",
+      manualFlag: null,
+      effect: null,
+      allStop: false,
+      power: true,
+      brightness: 80,
+    },
     services: [
       { id: "youtubeChat", label: "YT CHAT", state: "stopped", detail: null, canStart: true, canStop: false },
       { id: "chatAgent", label: "CHAT AGENT", state: "stopped", detail: null, canStart: true, canStop: false },
@@ -117,6 +128,7 @@ export class FakeDirector {
           "run.preflight", "run.start", "run.pause", "run.resume", "run.stop", "run.allStop",
           "obs.setScene", "obs.setStream", "obs.setRecord", "service.start", "service.stop", "service.restart",
           "coverage.setFocusWeight", "coverage.adjustFocusWeight",
+          "lights.setFlagSync", "lights.setPower", "lights.adjustBrightness", "lights.showFlag",
         ],
         services: ["youtubeChat", "chatAgent", "spectator"],
       });
@@ -144,6 +156,14 @@ export class FakeDirector {
         return;
       }
       const command = parsed.data as ControlCommand;
+      if (this.currentState.lights.flagSync && (
+        command.command === "lights.setPower"
+        || command.command === "lights.adjustBrightness"
+        || command.command === "lights.showFlag"
+      )) {
+        this.json(response, 409, { error: "Lights are on AUTO (flag sync)" });
+        return;
+      }
       this.commands.push(command);
       this.apply(command);
       this.json(response, 200, { ok: true, detail: "accepted", state: this.currentState });
@@ -204,6 +224,21 @@ export class FakeDirector {
           break;
         case "coverage.adjustFocusWeight":
           state.coverage.focusWeight = Math.max(0, Math.min(1, Math.round((state.coverage.focusWeight + command.args.delta) * 1000) / 1000));
+          break;
+        case "lights.setFlagSync":
+          state.lights.flagSync = command.args.enabled;
+          if (command.args.enabled) state.lights.manualFlag = null;
+          break;
+        case "lights.setPower":
+          state.lights.power = command.args.on;
+          break;
+        case "lights.adjustBrightness":
+          if (state.lights.brightness !== null) {
+            state.lights.brightness = Math.max(1, Math.min(100, state.lights.brightness + command.args.delta));
+          }
+          break;
+        case "lights.showFlag":
+          state.lights.manualFlag = command.args.flag;
           break;
       }
     });

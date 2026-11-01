@@ -62,6 +62,16 @@ const inspectors = [
     action: "com.simracecenter.director.focus-weight",
     kind: "focus",
   },
+  {
+    file: "lights-brightness.html",
+    action: "com.simracecenter.director.lights-brightness",
+    kind: "lights-brightness",
+  },
+  {
+    file: "lights-flag.html",
+    action: "com.simracecenter.director.lights-flag",
+    kind: "lights-flag",
+  },
 ] as const;
 
 describe.each(inspectors)("$file", ({ file, action, kind }) => {
@@ -121,6 +131,16 @@ describe.each(inspectors)("$file", ({ file, action, kind }) => {
         const value = window.document.querySelector<HTMLInputElement>("#value")!;
         value.value = "100";
         value.dispatchEvent(new window.Event("change", { bubbles: true }));
+      } else if (kind === "lights-brightness") {
+        const select = window.document.querySelector<HTMLSelectElement>("#delta")!;
+        expect(select.value).toBe("10");
+        select.value = "-25";
+        select.dispatchEvent(new window.Event("change", { bubbles: true }));
+      } else if (kind === "lights-flag") {
+        const select = window.document.querySelector<HTMLSelectElement>("#flag")!;
+        expect(select.value).toBe("green");
+        select.value = "focus";
+        select.dispatchEvent(new window.Event("change", { bubbles: true }));
       } else {
         socket!.message({
           event: "sendToPropertyInspector",
@@ -137,6 +157,16 @@ describe.each(inspectors)("$file", ({ file, action, kind }) => {
         expect(pluginMessages.map(message => message.payload)).toEqual([
           { type: "set-focus", focusMode: "preset", focusValue: 0.5 },
           { type: "set-focus", focusMode: "preset", focusValue: 1 },
+        ]);
+      } else if (kind === "lights-brightness") {
+        expect(pluginMessages.map(message => message.payload)).toEqual([
+          { type: "set-lights-delta", lightsDelta: 10 },
+          { type: "set-lights-delta", lightsDelta: -25 },
+        ]);
+      } else if (kind === "lights-flag") {
+        expect(pluginMessages.map(message => message.payload)).toEqual([
+          { type: "set-lights-flag", lightsFlag: "green" },
+          { type: "set-lights-flag", lightsFlag: "focus" },
         ]);
       } else {
         expect(pluginMessages).toHaveLength(1);

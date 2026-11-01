@@ -4,6 +4,10 @@ import {
   AllStopAction,
   ConnectionAction,
   FocusWeightAction,
+  LightsAutoAction,
+  LightsBrightnessAction,
+  LightsFlagAction,
+  LightsPowerAction,
   ObsRecordAction,
   ObsSceneAction,
   ObsStreamAction,
@@ -40,6 +44,10 @@ for (const action of [
   new ObsRecordAction(connection),
   new ServiceAction(connection),
   new FocusWeightAction(connection),
+  new LightsAutoAction(connection),
+  new LightsPowerAction(connection),
+  new LightsBrightnessAction(connection),
+  new LightsFlagAction(connection),
   new ConnectionAction(connection),
 ]) {
   streamDeck.actions.registerAction(action);

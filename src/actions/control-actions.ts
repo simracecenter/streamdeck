@@ -10,7 +10,7 @@ import streamDeck, {
   type WillDisappearEvent,
 } from "@elgato/streamdeck";
 import { InFlightLock } from "../action-runner";
-import type { ControlState } from "../contract";
+import type { ControlState, ManualFlag } from "../contract";
 import { DirectorConnection, type ConnectionSnapshot } from "../connection";
 import { HoldToFire } from "../hold";
 import { render, resolveObsScene, type ActionId, type ActionSettings, type FocusMode } from "../render";
@@ -336,6 +336,98 @@ export class FocusWeightAction extends ControlAction {
     if (!Number.isFinite(focusValue)) return;
     await event.action.setSettings({ focusMode, focusValue });
   }
+}
+
+export class LightsAutoAction extends ControlAction {
+  override manifestId = "com.simracecenter.director.lights-auto";
+  constructor(connection: DirectorConnection) {
+    super(connection, "lights-auto");
+  }
+  override onKeyDown(event: KeyDownEvent<ActionData>): Promise<void> {
+    const lights = this.connection.snapshot().state?.lights;
+    if (!lights) return this.showAlert(event.action, "Lights unavailable");
+    return this.runCommand(event.action, () => this.connection.command("lights.setFlagSync", { enabled: !lights.flagSync }));
+  }
+}
+
+export class LightsPowerAction extends ControlAction {
+  override manifestId = "com.simracecenter.director.lights-power";
+  constructor(connection: DirectorConnection) {
+    super(connection, "lights-power");
+  }
+  override onKeyDown(event: KeyDownEvent<ActionData>): Promise<void> {
+    const lights = this.connection.snapshot().state?.lights;
+    if (!lights || lights.reachable === 0) return this.showAlert(event.action, "No lights reachable");
+    return this.runCommand(event.action, () => this.connection.command("lights.setPower", { on: !(lights.power === true) }));
+  }
+}
+
+export class LightsBrightnessAction extends ControlAction {
+  override manifestId = "com.simracecenter.director.lights-brightness";
+  constructor(connection: DirectorConnection) {
+    super(connection, "lights-brightness");
+  }
+  override async onWillAppear(event: WillAppearEvent<ActionData>): Promise<void> {
+    const settings = lightsDeltaSettings(event.payload.settings);
+    if (settings !== event.payload.settings) await event.action.setSettings(settings);
+    if (event.action.isKey()) await this.refreshKey(event.action, settings);
+  }
+  override onKeyDown(event: KeyDownEvent<ActionData>): Promise<void> {
+    const delta = lightsDeltaSettings(event.payload.settings).lightsDelta;
+    return this.runCommand(event.action, () => this.connection.command("lights.adjustBrightness", { delta }));
+  }
+  override async onSendToPlugin(event: SendToPluginEvent<Record<string, any>, ActionData>): Promise<void> {
+    const value = event.payload as { type?: unknown; lightsDelta?: unknown };
+    if (value?.type !== "set-lights-delta") return;
+    const delta = Number(value.lightsDelta);
+    if (!validLightsDelta(delta)) return;
+    await event.action.setSettings({ lightsDelta: delta });
+  }
+}
+
+export class LightsFlagAction extends ControlAction {
+  override manifestId = "com.simracecenter.director.lights-flag";
+  constructor(connection: DirectorConnection) {
+    super(connection, "lights-flag");
+  }
+  override async onWillAppear(event: WillAppearEvent<ActionData>): Promise<void> {
+    const settings = lightsFlagSettings(event.payload.settings);
+    if (settings !== event.payload.settings) await event.action.setSettings(settings);
+    if (event.action.isKey()) await this.refreshKey(event.action, settings);
+  }
+  override onKeyDown(event: KeyDownEvent<ActionData>): Promise<void> {
+    const state = this.connection.snapshot().state;
+    if (!state) return this.showAlert(event.action, "Lights unavailable");
+    if (state.lights.flagSync) return this.showAlert(event.action, "Lights are on AUTO (flag sync)");
+    const flag = lightsFlagSettings(event.payload.settings).lightsFlag;
+    const requested = flag === "clear" || state.lights.manualFlag === flag ? null : flag;
+    return this.runCommand(event.action, () => this.connection.command("lights.showFlag", { flag: requested }));
+  }
+  override async onSendToPlugin(event: SendToPluginEvent<Record<string, any>, ActionData>): Promise<void> {
+    const value = event.payload as { type?: unknown; lightsFlag?: unknown };
+    if (value?.type !== "set-lights-flag" || !validLightsFlag(value.lightsFlag)) return;
+    await event.action.setSettings({ lightsFlag: value.lightsFlag });
+  }
+}
+
+const DEFAULT_LIGHTS_DELTA = 10;
+const DEFAULT_LIGHTS_FLAG: ManualFlag = "green";
+
+function lightsDeltaSettings(settings: ActionData): ActionData & { lightsDelta: number } {
+  return validLightsDelta(settings.lightsDelta) ? { ...settings, lightsDelta: settings.lightsDelta } : { ...settings, lightsDelta: DEFAULT_LIGHTS_DELTA };
+}
+
+function lightsFlagSettings(settings: ActionData): ActionData & { lightsFlag: ManualFlag | "clear" } {
+  return validLightsFlag(settings.lightsFlag) ? { ...settings, lightsFlag: settings.lightsFlag } : { ...settings, lightsFlag: DEFAULT_LIGHTS_FLAG };
+}
+
+function validLightsDelta(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= -50 && value <= 50 && value !== 0;
+}
+
+function validLightsFlag(value: unknown): value is ManualFlag | "clear" {
+  return value === "clear" || value === "green" || value === "yellow" || value === "blue"
+    || value === "white" || value === "red" || value === "checkered" || value === "debris" || value === "focus";
 }
 
 const DEFAULT_FOCUS_SETTINGS: ActionData = { focusMode: "preset", focusValue: 0.5 };
