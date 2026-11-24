@@ -7,7 +7,7 @@ export const FAKE_TOKEN = "fake-director-token";
 
 export function initialState(): ControlState {
   return {
-    api: 1,
+    api: 2,
     run: {
       available: true,
       live: false,
@@ -44,7 +44,6 @@ export function initialState(): ControlState {
     services: [
       { id: "youtubeChat", label: "YT CHAT", state: "stopped", detail: null, canStart: true, canStop: false },
       { id: "chatAgent", label: "CHAT AGENT", state: "stopped", detail: null, canStart: true, canStop: false },
-      { id: "spectator", label: "SPECTATOR", state: "stopped", detail: null, canStart: true, canStop: false },
     ],
   };
 }
@@ -122,15 +121,15 @@ export class FakeDirector {
     }
     if (request.method === "GET" && url.pathname === "/v1/capabilities") {
       this.json(response, 200, {
-        api: 1,
+        api: 2,
         directorVersion: "test",
         commands: [
           "run.preflight", "run.start", "run.pause", "run.resume", "run.stop", "run.allStop",
-          "obs.setScene", "obs.setStream", "obs.setRecord", "service.start", "service.stop", "service.restart",
+          "obs.setScene", "obs.setStream", "obs.setRecord", "service.start", "service.stop",
           "coverage.setFocusWeight", "coverage.adjustFocusWeight",
           "lights.setFlagSync", "lights.setPower", "lights.adjustBrightness", "lights.showFlag",
         ],
-        services: ["youtubeChat", "chatAgent", "spectator"],
+        services: ["youtubeChat", "chatAgent"],
       });
       return;
     }
@@ -217,8 +216,6 @@ export class FakeDirector {
           service.canStop = starting;
           break;
         }
-        case "service.restart":
-          break;
         case "coverage.setFocusWeight":
           state.coverage.focusWeight = command.args.weight;
           break;

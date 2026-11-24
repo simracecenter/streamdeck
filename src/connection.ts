@@ -167,7 +167,7 @@ export class DirectorConnection {
 }
 
 export function isCompatible(capabilities: ControlCapabilities): boolean {
-  return capabilities.api === 1 && controlCommandIds.every(command => capabilities.commands.includes(command));
+  return capabilities.api === 2 && controlCommandIds.every(command => capabilities.commands.includes(command));
 }
 
 function isHttpUrl(value: string): boolean {

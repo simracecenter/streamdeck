@@ -41,7 +41,7 @@ describe("render", () => {
     expect(render("obs-scene", "connected", state, { scene: "Grid" }).image).toBe("imgs/keys/green");
     expect(render("obs-stream", "connected", state)).toMatchObject({ title: "STREAM\nOFF", state: 0 });
     expect(render("obs-record", "connected", state)).toMatchObject({ title: "RECORD\nOFF", state: 0 });
-    expect(render("service", "connected", state, { serviceId: "spectator" }).title).toContain("SPECTATOR");
+    expect(render("service", "connected", state, { serviceId: "chatAgent" }).title).toContain("CHAT AGENT");
     expect(render("connection", "connected", state).title).toBe("CONNECTED");
     state.obs.streaming = null;
     state.obs.recording = null;

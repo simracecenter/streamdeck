@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Semantically identical to Director src/shared/control-surface.ts; operator-control API version 1.
+// Semantically identical to Director src/shared/control-surface.ts; operator-control API version 2.
 import { z } from "zod";
 
 export const flagNames = ["none", "green", "yellow", "blue", "red", "debris", "white", "checkered", "black"] as const;
@@ -10,7 +10,7 @@ export const manualFlagNames = ["green", "yellow", "blue", "white", "red", "chec
 export const manualFlagSchema = z.enum(manualFlagNames);
 export type ManualFlag = z.infer<typeof manualFlagSchema>;
 
-const serviceIdSchema = z.enum(["youtubeChat", "chatAgent", "spectator"]);
+const serviceIdSchema = z.enum(["youtubeChat", "chatAgent"]);
 
 export const controlCommandSchema = z.discriminatedUnion("command", [
   z.object({ command: z.literal("run.preflight") }).strict(),
@@ -24,7 +24,6 @@ export const controlCommandSchema = z.discriminatedUnion("command", [
   z.object({ command: z.literal("obs.setRecord"), args: z.object({ enabled: z.boolean() }).strict() }).strict(),
   z.object({ command: z.literal("service.start"), args: z.object({ id: serviceIdSchema }).strict() }).strict(),
   z.object({ command: z.literal("service.stop"), args: z.object({ id: serviceIdSchema }).strict() }).strict(),
-  z.object({ command: z.literal("service.restart"), args: z.object({ id: z.literal("spectator") }).strict() }).strict(),
   z.object({ command: z.literal("coverage.setFocusWeight"), args: z.object({ weight: z.number().min(0).max(1) }).strict() }).strict(),
   z.object({ command: z.literal("coverage.adjustFocusWeight"), args: z.object({ delta: z.number().min(-1).max(1) }).strict() }).strict(),
   z.object({ command: z.literal("lights.setFlagSync"), args: z.object({ enabled: z.boolean() }).strict() }).strict(),
@@ -46,7 +45,6 @@ export const controlCommandIds = [
   "obs.setRecord",
   "service.start",
   "service.stop",
-  "service.restart",
   "coverage.setFocusWeight",
   "coverage.adjustFocusWeight",
   "lights.setFlagSync",
@@ -55,11 +53,11 @@ export const controlCommandIds = [
   "lights.showFlag",
 ] as const;
 export const CONTROL_COMMAND_IDS = controlCommandIds;
-export const CONTROL_SERVICE_IDS = ["youtubeChat", "chatAgent", "spectator"] as const;
+export const CONTROL_SERVICE_IDS = ["youtubeChat", "chatAgent"] as const;
 
 export const controlServiceIdSchema = serviceIdSchema;
 export const controlStateSchema = z.object({
-  api: z.literal(1),
+  api: z.literal(2),
   run: z.object({
     available: z.boolean(),
     live: z.boolean(),
