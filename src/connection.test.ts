@@ -2,16 +2,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ControlState } from "./contract";
 import { DirectorConnection, isCompatible } from "./connection";
-import { DirectorCommandError } from "./director-client";
+import { DirectorClient, DirectorCommandError } from "./director-client";
+import { render } from "./render";
 import { initialState } from "../test/fake-director";
 import { controlCommandIds, controlCommandSchema, controlStateSchema } from "./contract";
 
 function capabilities(commands: string[]) {
   return {
-    api: 1,
+    api: 2,
     directorVersion: "test",
     commands,
-    services: ["youtubeChat", "chatAgent", "spectator"] as ("youtubeChat" | "chatAgent" | "spectator")[],
+    services: ["youtubeChat", "chatAgent"] as ("youtubeChat" | "chatAgent")[],
   };
 }
 
@@ -40,8 +41,41 @@ describe("DirectorConnection", () => {
   });
 
   it("classifies unsupported APIs and missing commands as incompatible", () => {
-    expect(isCompatible({ ...capabilities(["run.start"]), api: 2 })).toBe(false);
+    expect(isCompatible({ ...capabilities(["run.start"]), api: 3 })).toBe(false);
     expect(isCompatible(capabilities(["run.start"]))).toBe(false);
+    expect(isCompatible({ ...capabilities([...controlCommandIds]), api: 1 })).toBe(false);
+    expect(isCompatible(capabilities([...controlCommandIds]))).toBe(true);
+  });
+
+  it("shows UPDATE DIRECTOR and does not retry against a Director that still reports api 1", async () => {
+    // What a Director up to v0.18.1 answers: api 1, the spectator service and service.restart.
+    const legacyCapabilities = {
+      api: 1,
+      directorVersion: "0.18.1",
+      commands: [...controlCommandIds, "service.restart"],
+      services: ["youtubeChat", "chatAgent", "spectator"],
+    };
+    const requested: string[] = [];
+    const scheduled: number[] = [];
+    const fetcher = (async (input: RequestInfo | URL) => {
+      requested.push(new URL(String(input)).pathname);
+      return Response.json(legacyCapabilities);
+    }) as typeof fetch;
+    const connection = new DirectorConnection({
+      schedule: (callback, delay) => {
+        scheduled.push(delay);
+        return setTimeout(callback, delay);
+      },
+      makeClient: (url, token) => new DirectorClient(url, token, fetcher),
+    });
+    connection.configure({ token: "t" });
+    await vi.waitFor(() => expect(connection.snapshot().connection).toBe("incompatible"));
+    expect(connection.snapshot().state).toBeNull();
+    expect(render("connection", connection.snapshot().connection, null).title).toBe("UPDATE\nDIRECTOR");
+    expect(requested).toEqual(["/v1/capabilities"]);
+    expect(scheduled).toEqual([]);
+    await expect(connection.command("run.preflight")).rejects.toThrow("Director is not connected");
+    connection.stop();
   });
 
   it("uses the 1, 2, 5, and 10 second reconnect schedule and hydrates from SSE", async () => {
@@ -62,7 +96,7 @@ describe("DirectorConnection", () => {
           if (calls <= 4) throw new DirectorCommandError(0, "offline");
           return capabilities([
             "run.preflight", "run.start", "run.pause", "run.resume", "run.stop", "run.allStop",
-            "obs.setScene", "obs.setStream", "obs.setRecord", "service.start", "service.stop", "service.restart", "coverage.setFocusWeight", "coverage.adjustFocusWeight",
+            "obs.setScene", "obs.setStream", "obs.setRecord", "service.start", "service.stop", "coverage.setFocusWeight", "coverage.adjustFocusWeight",
             "lights.setFlagSync", "lights.setPower", "lights.adjustBrightness", "lights.showFlag",
           ]);
         },
@@ -80,7 +114,7 @@ describe("DirectorConnection", () => {
       if (delay !== 10_000) await vi.waitFor(() => expect(connection.snapshot().connection).toBe("offline"));
     }
     await vi.waitFor(() => expect(connection.snapshot().connection).toBe("connected"));
-    expect(connection.snapshot().state?.api).toBe(1);
+    expect(connection.snapshot().state?.api).toBe(2);
     expect(connection.snapshot().state).toEqual(state);
     connection.stop();
   });
@@ -97,14 +131,14 @@ describe("DirectorConnection", () => {
     unauthenticated.configure({ token: "revoked" });
     await vi.waitFor(() => expect(unauthenticated.snapshot().connection).toBe("unpaired"));
 
-    const invalidState = { ...initialState(), api: 2 } as unknown as ControlState;
+    const invalidState = { ...initialState(), api: 3 } as unknown as ControlState;
     const incompatible = new DirectorConnection({
       makeClient: () => ({
         pair: async () => ({ surfaceId: "s", token: "t" }),
         command: async () => ({ ok: true, detail: "", state: initialState() }),
         capabilities: async () => capabilities([
           "run.preflight", "run.start", "run.pause", "run.resume", "run.stop", "run.allStop",
-          "obs.setScene", "obs.setStream", "obs.setRecord", "service.start", "service.stop", "service.restart", "coverage.setFocusWeight", "coverage.adjustFocusWeight",
+          "obs.setScene", "obs.setStream", "obs.setRecord", "service.start", "service.stop", "coverage.setFocusWeight", "coverage.adjustFocusWeight",
           "lights.setFlagSync", "lights.setPower", "lights.adjustBrightness", "lights.showFlag",
         ]),
         subscribe: async function* () { yield invalidState; },

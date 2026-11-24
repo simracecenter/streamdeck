@@ -136,10 +136,10 @@ describe("built plugin with fake Stream Deck host", () => {
     await host.waitFor(message => message.event === "showOk" && message.context === "all-stop");
     expect(director.commands.filter(item => item.command === "run.allStop")).toHaveLength(1);
 
-    host.send(service, "willAppear", { settings: { serviceId: "spectator" } }, "service");
-    host.send(service, "keyDown", { settings: { serviceId: "spectator" } }, "service");
+    host.send(service, "willAppear", { settings: { serviceId: "chatAgent" } }, "service");
+    host.send(service, "keyDown", { settings: { serviceId: "chatAgent" } }, "service");
     await host.waitFor(message => message.event === "showOk" && message.context === "service");
-    host.send(service, "keyDown", { settings: { serviceId: "spectator" } }, "service");
+    host.send(service, "keyDown", { settings: { serviceId: "chatAgent" } }, "service");
     await host.waitFor(message =>
       message.event === "showOk" &&
       message.context === "service" &&
@@ -341,7 +341,7 @@ describe("built plugin with fake Stream Deck host", () => {
       { action: obsScene, context: "offline-scene", settings: { scene: "Replay" } },
       { action: obsStream, context: "offline-stream" },
       { action: obsRecord, context: "offline-record" },
-      { action: service, context: "offline-service", settings: { serviceId: "spectator" } },
+      { action: service, context: "offline-service", settings: { serviceId: "chatAgent" } },
       { action: connection, context: "offline-connection" },
     ];
     for (const visible of visibleActions) {

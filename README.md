@@ -12,6 +12,11 @@ client of Director's local operator-control API; it never connects to OBS direct
    and a recognizable surface name, then select **Pair**.
 4. Once paired, the key and other actions show the current Director connection and state.
 
+This plugin version needs a Director that speaks operator-control `api: 2`, which is the first
+Director release after v0.18.1. Director's built-in spectator service and the `service.restart`
+command no longer exist in that API. Against an older Director (`api: 1`) every key shows
+**UPDATE DIRECTOR** and sends no commands; update Director, then press **Connection** to reconnect.
+
 The default URL is `http://127.0.0.1:8782`. If Director is configured to listen on a LAN interface,
 use that host's local address and ensure the network is trusted.
 
@@ -29,7 +34,7 @@ use that host's local address and ensure the network is trusted.
 | OBS | OBS Scene | Select one of Director's live-scene slots 1–8 (automatic) or an explicit OBS scene; shows program tally. |
 | OBS | OBS Stream | Starts streaming on press; hold to stop. |
 | OBS | OBS Record | Starts recording on press; hold to stop. |
-| Services | Service | Select YouTube Chat, Chat Agent, or Spectator; starts/stops when allowed. |
+| Services | Service | Select YouTube Chat or Chat Agent; starts/stops when allowed. |
 | Coverage | Focus Weight | Preset key jumps the focus-driver weight (NATURAL 0% / BALANCED 50% / FULL 100% or any value); step key nudges it by ±n%. Title shows the live weight; needs a Director with `coverage.*` commands. |
 | LIGHTS | Lights Auto | Toggles Director flag synchronization; shows the current flag or ALL STOP. |
 | LIGHTS | Lights Power | Toggles the configured lights; reports reachable/configured devices. |
@@ -43,7 +48,7 @@ with the plugin package and has four pages with direct Go to Page navigation:
 
 ```text
 Page 1 DIRECTOR                          Page 2 OBS                              Page 3 SERVICES                         Page 4 LIGHTS
-[STATUS][PREFLT][START ][PAUSE ][STOP  ] [STREAM][RECORD][SCN 1 ][SCN 2 ][SCN 3 ] [YT CHT][CHT AG][SPECT ][      ][      ] [AUTO  ][POWER ][BR -10][BR +10][CLEAR ]
+[STATUS][PREFLT][START ][PAUSE ][STOP  ] [STREAM][RECORD][SCN 1 ][SCN 2 ][SCN 3 ] [YT CHT][CHT AG][      ][      ][      ] [AUTO  ][POWER ][BR -10][BR +10][CLEAR ]
 [ALLSTP][      ][      ][      ][      ] [SCN 4 ][SCN 5 ][SCN 6 ][SCN 7 ][SCN 8 ] [      ][      ][      ][      ][      ] [GREEN ][YELLOW][BLUE  ][WHITE ][RED   ]
 [PAGE 1][PAGE 2][PAGE 3][LIGHTS][CONN  ] [PAGE 1][PAGE 2][PAGE 3][STATUS][CONN  ] [PAGE 1][PAGE 2][PAGE 3][STATUS][CONN  ] [CHECK ][DEBRIS][FOCUS ][ALLSTP][BACK  ]
 ```
